@@ -1,13 +1,14 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:math/UI/learning/learning.dart';
 import 'dart:developer' as developer;
-import '../../Model/User.dart';
+
 import '../settings/settings.dart';
 
 
 class Topic extends StatefulWidget {
-  late User user;
+  late User? user;
   late String level;
   @override
   State<Topic> createState() => _Topic();
@@ -19,7 +20,7 @@ class Topic extends StatefulWidget {
 }
 
 class _Topic extends State<Topic> {
-  late User user;
+  late User? user;
   late String topic;
 
   @override
@@ -98,7 +99,7 @@ class _Topic extends State<Topic> {
                 Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => Settings(user: user)));
+                        builder: (context) => UserSettings(user: user)));
                 break;
             }
           },

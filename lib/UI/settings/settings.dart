@@ -1,22 +1,23 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:math/UI/account/login.dart';
 import 'package:math/UI/learning/learning.dart';
 import 'package:math/UI/learning/level_choice.dart';
 
-import '../../Model/User.dart';
 
-class Settings extends StatefulWidget {
-  late User user;
+
+class UserSettings extends StatefulWidget {
+  late User? user;
 
   @override
   _Settings createState() => _Settings();
 
-  Settings({Key? key, required this.user}) : super(key: key);
+  UserSettings({Key? key, required this.user}) : super(key: key);
 }
 
-class _Settings extends State<Settings> {
-  late User user;
+class _Settings extends State<UserSettings> {
+  late User? user;
 
   @override
   void initState() {

@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:math/Model/User.dart';
@@ -39,10 +40,10 @@ class _UserForm extends State<UserForm> {
 
   RecoverPasswdUser() async {
     var email = emailController.text;
-
-    //Recover passeword for the user
     //notifications if email is not used, etc
-
+    await FirebaseAuth.instance
+        .sendPasswordResetEmail(email: email);
+    if (!mounted) return;
     Navigator.push(
         context,
         MaterialPageRoute(

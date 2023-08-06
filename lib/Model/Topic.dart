@@ -1,32 +1,54 @@
 import 'dart:convert';
 import 'dart:ffi';
 
-class Topic{
+import 'package:cloud_firestore/cloud_firestore.dart';
 
+
+class Topic {
   late final String id;
   late final String name;
   late final String sectionId;
-  late final Bool completed;
-
+  late final String level;
+  Topic.empty();
   Topic({
     required this.id,
     required this.name,
     required this.sectionId,
-    required this.completed
+    required this.level
   });
 
+  factory Topic.fromFirestore(
+      DocumentSnapshot<Map<String, dynamic>> snapshot,
+      SnapshotOptions? options,
+      ) {
+    final data = snapshot.data();
+    return Topic(
+      id: snapshot.id,
+      name: data?['name'],
+      sectionId: data?['section'],
+      level: data?['level'],
+    );
+  }
+  Map<String, dynamic> toFirestore() {
+    return {
+      if (name != null) "name": name,
+      if (sectionId != null) "section": sectionId,
+      if (level != null) "level": level,
+
+    };
+  }
 
   Topic.fromMap(Map<String, dynamic> result)
       : id = result["id"],
         name = result["name"],
         sectionId = result["sectionId"],
-        completed = result["completed"];
+        level = result["level"];
   Map<String, Object> toMap() {
     return {
       'id': id,
       'name': name,
       'sectionId': sectionId,
-      'completed': completed
+      'level': level
     };
   }
 

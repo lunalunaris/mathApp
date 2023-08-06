@@ -1,11 +1,13 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:math/UI/learning/learning.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-import '../../Model/User.dart';
+
 
 class LevelChoice extends StatefulWidget {
-  late User user;
+  late User? user;
 
   LevelChoice({Key? key, required this.user}) : super(key: key);
 
@@ -14,10 +16,16 @@ class LevelChoice extends StatefulWidget {
 }
 
 class _LevelChoiceState extends State<LevelChoice> {
-  late User user;
+  late User? user;
 
   selectLevel(String level) {
     //push to database user's level choice
+    FirebaseFirestore db = FirebaseFirestore.instance;
+    // db.collection("cities").doc("new-city-id2").set({"name": "Osaka"});
+    // final data = {"name": "Warsaw", "country": "Poland"};
+    //
+    // db.collection("cities").add(data).then((documentSnapshot) =>
+    //     print("Added Data with ID: ${documentSnapshot.id}"));
     Navigator.push(
         context,
         MaterialPageRoute(
@@ -29,7 +37,6 @@ class _LevelChoiceState extends State<LevelChoice> {
   @override
   void initState() {
     user = widget.user;
-    user = User();
     super.initState();
   }
 

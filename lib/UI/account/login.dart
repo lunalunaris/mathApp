@@ -1,9 +1,15 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:math/Model/User.dart';
+
 import 'package:math/UI/account/recover_password.dart';
 import 'package:math/UI/account/register.dart';
 import 'package:math/UI/learning/level_choice.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+
+import '../../Model/Topic.dart';
 
 class Login extends StatelessWidget {
   const Login({Key? key}) : super(key: key);
@@ -39,13 +45,14 @@ class UserForm extends StatefulWidget {
   State<UserForm> createState() => _UserForm();
 }
 
-User user = User();
+User? user = null;
 
 class _UserForm extends State<UserForm> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
+  @override
 
-  signIn() async {
+  signIn(BuildContext context) async {
     var email = emailController.text;
     var password = passwordController.text;
     //login the user, then:
@@ -54,12 +61,34 @@ class _UserForm extends State<UserForm> {
     // if (!callerUserRecord.customClaims.admin) {
     //   throw new NotAnAdminError('Only Admin users can create new users.');
     // set custom claims/roles for users who have already chosen the level
-    Navigator.push(
-        context,
-        MaterialPageRoute(
-            builder: (context) => LevelChoice(
-                  user: user,
-                )));
+
+    FirebaseFirestore db = FirebaseFirestore.instance;
+    // db.collection("Topic").doc("new-city-id").set({"name": "Chicago"});
+    // Topic data =  Topic(id: "null",name :'Przedziały', level: 'Liceum', sectionId: 'Wprowadzenie');
+    // db.collection("Topic").add(data.toFirestore()).then((documentSnapshot) =>
+    //     print("Added Data with ID: ${documentSnapshot.id}"));
+
+    try {
+      final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: email,
+          password: password
+      );
+
+      if (!mounted) return;
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => LevelChoice(
+                user: FirebaseAuth.instance.currentUser,
+              )));
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'user-not-found') {
+        print('No user found for that email.');
+      } else if (e.code == 'wrong-password') {
+        print('Wrong password provided for that user.');
+      }
+    }
+
 
     // displayDialog(context, "Incorrect Input", "Invalid credentials");
   }
@@ -73,7 +102,11 @@ class _UserForm extends State<UserForm> {
 
   @override
   void initState() {
-    user = User();
+    user = null;
+    Firebase.initializeApp().whenComplete(() {
+      print("completed");
+      setState(() {});
+    });
     super.initState();
   }
 
@@ -139,7 +172,7 @@ class _UserForm extends State<UserForm> {
             ),
             ElevatedButton(
                 onPressed: () {
-                  signIn();
+                  signIn(context);
                 },
                 style: ButtonStyle(
                     fixedSize: MaterialStateProperty.all(const Size(200, 50)),
