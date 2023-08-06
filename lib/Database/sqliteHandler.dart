@@ -2,7 +2,8 @@ import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../Model/Level.dart';
-import '../Model/Practice.dart';
+import '../Model/PracticeModel.dart';
+
 import '../Model/Section.dart';
 import '../Model/Topic.dart';
 
@@ -14,7 +15,7 @@ class SqliteHandler {
       version: 1,
       onCreate: (Database db, int version) async {
         await db.execute(
-            'CREATE TABLE savedPractice(id TEXT PRIMARY KEY, topicId TEXT, content TEXT, img TEXT, result TEXT, solutions TEXT); '
+            'CREATE TABLE savedPracticeModel(id TEXT PRIMARY KEY, topicId TEXT, content TEXT, img TEXT, result TEXT, solutions TEXT); '
             'CREATE TABLE completedTask(id TEXT PRIMARY KEY); '
             'CREATE TABLE topics(id TEXT PRIMARY KEY, name TEXT, sectionId TEXT, completed BOOLEAN);'
             'CREATE TABLE sections(id TEXT PRIMARY KEY, name TEXT, levelId TEXT, completed BOOLEAN);'
@@ -24,25 +25,25 @@ class SqliteHandler {
   }
 
 // ---------------------- user end ---------------------------
-  Future<List<Practice>> getPractices() async {
+  Future<List<PracticeModel>> getPracticeModels() async {
     final Database db = await initializeDB();
     final List<Map<String, Object?>> queryResult =
-        await db.query('savedPractice');
-    return queryResult.map((e) => Practice.fromMap(e)).toList();
+        await db.query('savedPracticeModel');
+    return queryResult.map((e) => PracticeModel.fromMap(e)).toList();
   }
 
-  Future<Practice?> getPracticeById(String id) async {
+  Future<PracticeModel?> getPracticeModelById(String id) async {
     final Database db = await initializeDB();
     var response =
-        await db.query("savedPractice", where: "id = ?", whereArgs: [id]);
-    return response.isNotEmpty ? Practice.fromMap(response.first) : null;
+        await db.query("savedPracticeModel", where: "id = ?", whereArgs: [id]);
+    return response.isNotEmpty ? PracticeModel.fromMap(response.first) : null;
   }
 
-  Future<List<Practice>> getPracticeByTopicId(String id) async {
+  Future<List<PracticeModel>> getPracticeModelByTopicId(String id) async {
     final Database db = await initializeDB();
     final List<Map<String, Object?>> queryResult = await db.rawQuery(
-        'select * from savedPractice from join topics on topics.id = savedPractice.topicId where topics.id = "${id}"');
-    return queryResult.map((e) => Practice.fromMap(e)).toList();
+        'select * from savedPracticeModel from join topics on topics.id = savedPracticeModel.topicId where topics.id = "${id}"');
+    return queryResult.map((e) => PracticeModel.fromMap(e)).toList();
   }
 
   Future<List<Level>> getAllLevels() async {
@@ -82,12 +83,12 @@ class SqliteHandler {
   }
 
 //// update all tables, delete by name, delete by id, delete all
-  Future<void> insertSavedPractice(Practice practice) async {
+  Future<void> insertSavedPracticeModel(PracticeModel practiceModel) async {
     final Database db = await initializeDB();
     int result = 0;
     result = await db.insert(
-      'savedPractice',
-      practice.toMap(),
+      'savedPracticeModel',
+      practiceModel.toMap(),
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }

@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:ffi';
 
-class Practice{
+class PracticeModel{
 
   late final String id;
   late final String topicId;
@@ -9,7 +9,7 @@ class Practice{
   late final String img;
   late final String result;
   late final List<String> solutions;
-  Practice({
+  PracticeModel({
     required this.id,
     required this.topicId,
     required this.content,
@@ -18,7 +18,7 @@ class Practice{
     required this.solutions,
   });
 
-  Practice.fromMap(Map<String, dynamic> result)
+  PracticeModel.fromMap(Map<String, dynamic> result)
       : id = result["id"],
         topicId = result["topicId"],
         content = result["content"],
@@ -34,6 +34,24 @@ class Practice{
       'result' : result,
       'solutions' : solutions.toString()
     };
+  }
+  String getId(){
+    return id;
+  }
+  String getTopic(){
+    return topicId;
+  }
+  String getContent(){
+    return content;
+  }
+  String getImg(){
+    return img;
+  }
+  String getResult(){
+    return result;
+  }
+  List<String> getSolutions(){
+    return solutions;
   }
 
 }
