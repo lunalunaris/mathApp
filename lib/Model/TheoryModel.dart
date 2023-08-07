@@ -10,24 +10,18 @@ class TheoryModel {
   TheoryModel(
       {required this.id,
       required this.topicId,
-      required this.img,
-      required this.section,
-      required this.lang});
+      required this.img,});
 
   TheoryModel.fromMap(Map<String, dynamic> result)
       : id = result["id"],
         topicId = result["topicId"],
-        img = result["img"],
-        section = result["section"],
-        lang = result["lang"];
+        img = result["img"];
 
   Map<String, Object> toMap() {
     return {
       'id': id,
       'topicId': topicId,
       'img': img,
-      'section': section,
-      'lang': lang
     };
   }
 
@@ -39,17 +33,13 @@ class TheoryModel {
     return TheoryModel(
         id: snapshot.id,
         topicId: data?['topicId'],
-        img: data?["img"],
-        section: data?['section'],
-        lang: data?['lang']);
+        img: data?["img"]);
   }
 
   Map<String, dynamic> toFirestore() {
     return {
       if (topicId != null) "topicId": topicId,
       if (img != null) "img": img,
-      if (section != null) "section": section,
-      if (lang != null) "lang": lang,
     };
   }
 }
