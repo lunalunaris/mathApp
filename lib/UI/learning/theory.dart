@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:math/UI/learning/learning.dart';
 import 'dart:developer' as developer;
-import '../../Model/User.dart';
+import '../../temp/User.dart';
 import '../settings/settings.dart';
 
 class Theory extends StatefulWidget {

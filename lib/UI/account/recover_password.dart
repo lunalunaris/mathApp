@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:math/Model/User.dart';
+import 'package:math/temp/User.dart';
 import 'package:math/UI/account/login.dart';
 import 'package:math/UI/learning/level_choice.dart';
 

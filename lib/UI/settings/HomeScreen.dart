@@ -6,8 +6,15 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:math/UI/account/login.dart';
 
-import '../learning/learning.dart';
+// import 'package:flutter/foundation.dart' show kIsWeb;
+//
+// if (kIsWeb) {
+// }
+// }
 
+
+
+import '../learning/learning.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -15,12 +22,15 @@ class HomeScreen extends StatefulWidget {
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
-
 class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    Firebase.initializeApp().whenComplete(() {
+    Firebase.initializeApp( options:  const FirebaseOptions(
+        apiKey: "AIzaSyBJu7UoUsqnHchQPQnlNybmp4_G4vDTJQ0",
+        appId: "1:1038366447891:web:33fb81222517178ad4e2e6",
+        messagingSenderId: "1038366447891",
+        projectId: "math-16d0d")).whenComplete(() {
       print("completed");
       setState(() {});
     });    Timer(const Duration(seconds: 3),

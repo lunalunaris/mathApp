@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'dart:developer' as developer;
-import '../../Model/Topic.dart';
+import '../../Model/TopicModel.dart';
 
 import '../settings/settings.dart';
 
@@ -20,8 +20,10 @@ class Learning extends StatefulWidget {
 class _Learning extends State<Learning> {
   late User? user;
   late String level;
-  late Topic topic= Topic(id: "none",name: "loading...",sectionId: "none",level: "none");
+  late TopicModel topic= TopicModel(id: "none",name: "loading...",sectionId: "none",level: "none", lang: 'en_UK');
 
+  late Map<String,List<TopicModel>> topics= {"section1": [TopicModel(id: "1",name: "topic1",sectionId: "section1",level: "class1", lang: 'en_UK')],
+    "section2" : [TopicModel(id: "2",name: "topic3",sectionId: "section2",level: "class1", lang: 'en_UK')],};
   @override
   void initState()  {
 
@@ -31,41 +33,11 @@ class _Learning extends State<Learning> {
     super.initState();
   }
   initAppointmentList() async {
-    await getTopics();
+    // await getTopics();
     setState(() {});
   }
 
-  Future<Topic?> getTopics() async {
-    FirebaseFirestore db = FirebaseFirestore.instance;
-    final ref = db.collection("Topic").doc("di5oYBaHX4PjAmIBnu4K").withConverter(
-      fromFirestore: Topic.fromFirestore,
-      toFirestore: (Topic city, _) => city.toFirestore(),
-    );
-    final docSnap = await ref.get();
-    topic = docSnap.data()!; // Convert to City object
-    if (topic != null) {
-      print(topic.id);
-      return topic;
-    } else {
-      print("No such document.");
-      return null;
-    }
-    // List<Topic> topics =[];
-    // db.collection("Topic").get().then(
-    //       (querySnapshot) {
-    //     print("Successfully completed");
-    //     for (var docSnapshot in querySnapshot.docs) {
-    //       topics.add(Topic(id: docSnapshot.id, name: docSnapshot.data()["name"], sectionId: docSnapshot.data()["section"], level: docSnapshot.data()["level"]));
-    //       print(topics[0]);
-    //     }
-    //   },
-    //   onError: (e) => print("Error completing: $e"),
-    // );
 
-
-
-
-    }
 
 
   @override
@@ -77,10 +49,9 @@ class _Learning extends State<Learning> {
         title: const Text("Learning"),
       ),
       body: Center(
-          child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-            Text(topic.name,
-                style: TextStyle(
-                    fontSize: 30, fontWeight: FontWeight.bold, color: Colors.pink))
+          child: Table( children:
+            [
+
           ])),
       bottomNavigationBar: BottomNavigationBar(
           backgroundColor: Colors.teal,

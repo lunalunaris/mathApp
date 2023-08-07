@@ -4,8 +4,8 @@
 // import '../Model/Level.dart';
 // import '../Model/PracticeModel.dart';
 //
-// import '../Model/Section.dart';
-// import '../Model/Topic.dart';
+// import '../Model/SectionModel.dart';
+// import '../Model/TopicModel.dart';
 //
 // class SqliteHandler {
 //   Future<Database> initializeDB() async {

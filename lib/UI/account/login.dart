@@ -9,7 +9,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 
-import '../../Model/Topic.dart';
+import '../../Model/TopicModel.dart';
 
 class Login extends StatelessWidget {
   const Login({Key? key}) : super(key: key);

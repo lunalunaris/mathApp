@@ -20,12 +20,7 @@ class _LevelChoiceState extends State<LevelChoice> {
 
   selectLevel(String level) {
     //push to database user's level choice
-    FirebaseFirestore db = FirebaseFirestore.instance;
-    // db.collection("cities").doc("new-city-id2").set({"name": "Osaka"});
-    // final data = {"name": "Warsaw", "country": "Poland"};
-    //
-    // db.collection("cities").add(data).then((documentSnapshot) =>
-    //     print("Added Data with ID: ${documentSnapshot.id}"));
+
     Navigator.push(
         context,
         MaterialPageRoute(
