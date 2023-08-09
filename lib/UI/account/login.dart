@@ -26,13 +26,18 @@ class Login extends StatelessWidget {
         ),
       ),
       backgroundColor: Colors.white,
-      body: const Scaffold(
-        body: SizedBox(
-          width: 400,
-          child: Card(
-            child: UserForm(),
-          ),
-        ),
+      body:  Scaffold(
+        body:  Container(
+    decoration: BoxDecoration(
+    gradient: LinearGradient(
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    colors: [
+    Colors.pink.shade500.withOpacity(0.8),
+    Colors.teal.shade100.withOpacity(0.8),
+    ],
+    )),
+            child: const UserForm(),),
       ),
     );
   }
@@ -62,11 +67,6 @@ class _UserForm extends State<UserForm> {
     //   throw new NotAnAdminError('Only Admin users can create new users.');
     // set custom claims/roles for users who have already chosen the level
 
-    FirebaseFirestore db = FirebaseFirestore.instance;
-    // db.collection("Topic").doc("new-city-id").set({"name": "Chicago"});
-    // Topic data =  Topic(id: "null",name :'Przedziały', level: 'Liceum', sectionId: 'Wprowadzenie');
-    // db.collection("Topic").add(data.toFirestore()).then((documentSnapshot) =>
-    //     print("Added Data with ID: ${documentSnapshot.id}"));
 
     try {
       final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
@@ -112,107 +112,123 @@ class _UserForm extends State<UserForm> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-        padding: EdgeInsets.all(20),
-        child: Column(
-          children: [
-            const SizedBox(
-              height: 150,
-            ),
-            const Text("Log in",
-                style: TextStyle(
-                    fontSize: 30,
-                    color: Colors.pink,
-                    fontWeight: FontWeight.bold)),
-            const SizedBox(
-              height: 20,
-            ),
-            const Text("Welcome back",
-                style: TextStyle(fontSize: 20, color: Colors.teal)),
-            const SizedBox(
-              height: 30,
-            ),
-            SizedBox(
-              width: 300,
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: TextField(
-                    controller: emailController,
-                    decoration: InputDecoration(
-                      contentPadding: const EdgeInsets.symmetric(
-                          vertical: 10, horizontal: 20),
-                      border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10.0)),
-                      hintText: "Email",
-                    )),
+    return
+       SingleChildScrollView(
+
+          padding: EdgeInsets.all(10),
+
+            child: Container(
+              padding: const EdgeInsets.all(5),
+              margin: const EdgeInsets.all(30),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10.0),
+                color: Colors.white.withOpacity(0.8),
+              ),
+              child: Column(
+                children: [
+                  const SizedBox(
+                    height: 150,
+                  ),
+                  const Text("Log in",
+                      style: TextStyle(
+                          fontSize: 30,
+                          color: Colors.pink,
+                          fontWeight: FontWeight.bold)),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  const Text("Welcome back",
+                      style: TextStyle(fontSize: 20, color: Colors.teal)),
+                  const SizedBox(
+                    height: 30,
+                  ),
+                  SizedBox(
+                    width: 300,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: TextField(
+                          controller: emailController,
+                          decoration: InputDecoration(
+                            contentPadding: const EdgeInsets.symmetric(
+                                vertical: 10, horizontal: 20),
+                            border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10.0)),
+                            hintText: "Email",
+                          )),
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  SizedBox(
+                    width: 300,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: TextField(
+                          obscureText: true,
+                          enableSuggestions: false,
+                          autocorrect: false,
+                          controller: passwordController,
+                          decoration: InputDecoration(
+                              contentPadding: const EdgeInsets.symmetric(
+                                  vertical: 10, horizontal: 20),
+                              border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10.0)),
+                              hintText: "password")),
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 40,
+                  ),
+                  ElevatedButton(
+                      onPressed: () {
+                        signIn(context);
+                      },
+                      style: ButtonStyle(
+                          fixedSize: MaterialStateProperty.all(const Size(200, 50)),
+                          backgroundColor: MaterialStateProperty.all(Colors.teal),
+                          shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                              RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ))),
+                      child: const Text(
+                        "Login",
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      )),
+                  SizedBox(
+                    height: 20,
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      TextButton(
+                          onPressed: () {
+                            Navigator.push(context,
+                                MaterialPageRoute(builder: (context) => Register()));
+                          },
+                          child: Text("Register",
+                              style: TextStyle(fontSize: 20, color: Colors.teal))),
+                      SizedBox(width: 20),
+                      Container(
+                        margin: EdgeInsets.all(20),
+                        child: TextButton(
+                            onPressed: () {
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => RecoverPasswd()));
+                            },
+                            child: const Text(
+                              "Forgot password?",
+                              style: TextStyle(fontSize: 20, color: Colors.teal),
+                            )),
+                      )
+                    ],
+                  )
+                ],
               ),
             ),
-            const SizedBox(
-              height: 20,
-            ),
-            SizedBox(
-              width: 300,
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: TextField(
-                    obscureText: true,
-                    enableSuggestions: false,
-                    autocorrect: false,
-                    controller: passwordController,
-                    decoration: InputDecoration(
-                        contentPadding: const EdgeInsets.symmetric(
-                            vertical: 10, horizontal: 20),
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10.0)),
-                        hintText: "password")),
-              ),
-            ),
-            const SizedBox(
-              height: 40,
-            ),
-            ElevatedButton(
-                onPressed: () {
-                  signIn(context);
-                },
-                style: ButtonStyle(
-                    fixedSize: MaterialStateProperty.all(const Size(200, 50)),
-                    backgroundColor: MaterialStateProperty.all(Colors.teal),
-                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                        RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ))),
-                child: const Text(
-                  "Login",
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                )),
-            SizedBox(
-              height: 20,
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                TextButton(
-                    onPressed: () {
-                      Navigator.push(context,
-                          MaterialPageRoute(builder: (context) => Register()));
-                    },
-                    child: Text("Register",
-                        style: TextStyle(fontSize: 20, color: Colors.teal))),
-                SizedBox(width: 20),
-                TextButton(
-                    onPressed: () {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => RecoverPasswd()));
-                    },
-                    child: Text(
-                      "Forgot password?",
-                      style: TextStyle(fontSize: 20, color: Colors.teal),
-                    ))
-              ],
-            )
-          ],
-        ));
+          );
   }
 }

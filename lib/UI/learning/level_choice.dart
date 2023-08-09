@@ -25,7 +25,7 @@ class _LevelChoiceState extends State<LevelChoice> {
         context,
         MaterialPageRoute(
             builder: (context) => Learning(
-                  user: user
+
                 )));
   }
 

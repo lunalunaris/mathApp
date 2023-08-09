@@ -4,7 +4,6 @@ class TopicModel {
   late final String id;
   late final String name;
   late final String sectionId;
-  late final String level;
   late final String lang;
 
   TopicModel.empty();
@@ -13,7 +12,6 @@ class TopicModel {
       {required this.id,
       required this.name,
       required this.sectionId,
-      required this.level,
       required this.lang});
 
   factory TopicModel.fromFirestore(
@@ -25,7 +23,6 @@ class TopicModel {
       id: snapshot.id,
       name: data?['name'],
       sectionId: data?['section'],
-      level: data?['level'],
       lang: data?['lang'],
     );
   }
@@ -34,7 +31,6 @@ class TopicModel {
     return {
       if (name != null) "name": name,
       if (sectionId != null) "section": sectionId,
-      if (level != null) "level": level,
       if (lang != null) "lang": lang,
     };
   }
@@ -43,7 +39,6 @@ class TopicModel {
       : id = result["id"],
         name = result["name"],
         sectionId = result["sectionId"],
-        level = result["level"],
         lang = result["lang"];
 
   Map<String, Object> toMap() {
@@ -51,7 +46,6 @@ class TopicModel {
       'id': id,
       'name': name,
       'sectionId': sectionId,
-      'level': level,
       'lang': lang
     };
   }

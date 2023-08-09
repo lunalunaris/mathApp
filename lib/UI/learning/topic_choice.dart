@@ -4,90 +4,66 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:math/Database/FireStoreHandler.dart';
 import 'package:math/Model/SectionModel.dart';
-import 'package:math/UI/learning/topic_choice.dart';
+import 'package:math/UI/learning/topic.dart';
 import 'dart:developer' as developer;
 import '../../Model/TopicModel.dart';
 import '../settings/settings.dart';
 import 'dart:typed_data';
 
-class Learning extends StatefulWidget {
+import 'learning.dart';
 
-  const Learning({Key? key,}) : super(key: key);
+class TopicChoice extends StatefulWidget {
+  late SectionModel section;
+
+  TopicChoice({Key? key, required this.section}) : super(key: key);
 
   @override
-  State<Learning> createState() => _Learning();
+  State<TopicChoice> createState() => _TopicChoice();
 }
 
-class _Learning extends State<Learning> {
+class _TopicChoice extends State<TopicChoice> {
   FirebaseFirestore db = FirebaseFirestore.instance;
-  late User? user ;
-  late String level;
+  late User? user;
+  late SectionModel section;
   late FirestoreHandler fs = FirestoreHandler();
 
-  late List<SectionModel> sections = [
-    SectionModel(id: "temo", name: "Loading...", level: "0", lang: "en_US")
+  late List<TopicModel> topics = [
+    TopicModel(id: "temo", name: "Loading...", sectionId: "temp", lang: "en_US")
   ];
 
   @override
   void initState() {
-    user = FirebaseAuth.instance.currentUser;
-    level = "0"; //get level from user
-    initSectionList();
-
+    user =FirebaseAuth.instance.currentUser;
+    section = widget.section;
+    initTopicList(section);
     super.initState();
   }
 
-  initSectionList() async {
+
+  initTopicList(SectionModel section) async {
     await db
-        .collection("Section")
-        .where("level", isEqualTo: level)
+        .collection("Topic")
+        .where("section", isEqualTo: section.id)
         .where("lang", isEqualTo: "en_US")
         .get()
-        .then((querySnapshot) async {
-      print("sections by level completed");
-      sections = [];
+        .then((querySnapshot) {
+      print("topics by section completed");
+      topics = [];
       for (var docSnapshot in querySnapshot.docs) {
         print(docSnapshot.data());
-        sections.add(SectionModel(
+        topics.add(TopicModel(
             id: docSnapshot.id,
             name: docSnapshot.data()["name"],
-            level: docSnapshot.data()["level"],
-            lang: docSnapshot.data()["lang"]));
-        print(sections.length);
+            lang: docSnapshot.data()["lang"],
+            sectionId: docSnapshot.data()["section"]));
+        print(topics.length);
       }
-    }, onError: (e) => print("Error fetching sections by level"));
+    }, onError: (e) => print("Error fetching topics by section"));
     setState(() {});
   }
 
-  // initTopicList() async {
-  //   // await getTopics();
-  //   // final List<TopicModel>? temp = await fs.getTopicsBySection("wAFghhql2m4JrNqUj58p", "en_US");
-  //   await db
-  //       .collection("Topic")
-  //       .where("section", isEqualTo: "wAFghhql2m4JrNqUj58p")
-  //       .where("lang", isEqualTo: "en_US")
-  //       .get()
-  //       .then((querySnapshot) {
-  //     print("topics by section completed");
-  //     // print(querySnapshot.toString());
-  //     topics = [];
-  //     for (var docSnapshot in querySnapshot.docs) {
-  //       print(docSnapshot.data());
-  //       topics.add(TopicModel(
-  //           id: docSnapshot.id,
-  //           name: docSnapshot.data()["name"],
-  //           lang: docSnapshot.data()["lang"],
-  //           sectionId: docSnapshot.data()["section"]));
-  //       print(topics.length);
-  //     }
-  //   }, onError: (e) => print("Error fetching topics by section"));
-  //   setState(() {});
-  // }
-
   @override
   Widget build(BuildContext context) {
-    // TODO: implement build
-
     return Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
@@ -96,13 +72,13 @@ class _Learning extends State<Learning> {
         body: Container(
           decoration: BoxDecoration(
               gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Colors.pink.shade500.withOpacity(0.8),
-              Colors.teal.shade100.withOpacity(0.8),
-            ],
-          )),
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.pink.shade500.withOpacity(0.8),
+                  Colors.teal.shade100.withOpacity(0.8),
+                ],
+              )),
           child: Container(
             padding: const EdgeInsets.all(5),
             margin: const EdgeInsets.all(30),
@@ -114,9 +90,9 @@ class _Learning extends State<Learning> {
             child: ListView(
               children: [
                 Container(padding: EdgeInsets.all(10),alignment: Alignment.center,
-                    child: Text("Choose chapter", style: TextStyle(fontSize: 20,fontWeight: FontWeight.bold,color: Colors.teal.withOpacity(0.7)),)),
+                    child: Text("Choose topic", style: TextStyle(fontSize: 20,fontWeight: FontWeight.bold,color: Colors.teal.withOpacity(0.7)),)),
                 const Divider(height: 0,indent: 40, endIndent: 40,color: Colors.teal,),
-                for (var i in sections)
+                for (var i in topics)
                   Column(children: [
                     ListTile(
                       leading: const Icon(Icons.star_border),
@@ -125,18 +101,16 @@ class _Learning extends State<Learning> {
                               context,
                               MaterialPageRoute(
                                   builder: (context) =>
-                                  TopicChoice(section: i)));},
+                                   Topic(topic: i)));},
                           style: ButtonStyle(
                               backgroundColor: MaterialStateProperty.all(
                                   Colors.white.withOpacity(0.1)),
-                              overlayColor: MaterialStateProperty.all(
-                                  Colors.pinkAccent.withOpacity(0.3)),
                               shape: MaterialStateProperty.all<
-                                      RoundedRectangleBorder>(
+                                  RoundedRectangleBorder>(
                                   const RoundedRectangleBorder(
-                                borderRadius:
+                                    borderRadius:
                                     BorderRadius.all(Radius.circular(5)),
-                              ))),
+                                  ))),
                           child: Text(
                             i.name,
                             style: const TextStyle(
@@ -144,9 +118,7 @@ class _Learning extends State<Learning> {
                                 fontWeight: FontWeight.bold,
                                 color: Colors.black54),
                           )),
-                      trailing: IconButton(
-                          onPressed: () {},
-                          icon: const Icon(Icons.question_answer_rounded)),
+
                     ),
                     const Divider(height: 0),
                   ])
@@ -157,6 +129,7 @@ class _Learning extends State<Learning> {
         bottomNavigationBar: BottomNavigationBar(
             backgroundColor: Colors.teal.shade400,
             selectedItemColor: Colors.pink.withOpacity(0.8),
+            currentIndex: 0,
             unselectedItemColor: Colors.teal.shade900.withOpacity(0.8),
             items: const <BottomNavigationBarItem>[
               BottomNavigationBarItem(
@@ -173,16 +146,15 @@ class _Learning extends State<Learning> {
               ),
             ],
             onTap: (option) {
-              developer.log(option.toString());
               switch (option) {
-                // case 2:
-                //   Navigator.of(context).pop();
-                //   Navigator.push(
-                //       context,
-                //       MaterialPageRoute(
-                //           builder: (context) =>
-                //               Game(user: user)));
-                //   break;
+              case 0:
+                Navigator.of(context).pop();
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) =>
+                            const Learning()));
+                break;
                 case 2:
                   Navigator.of(context).pop();
                   Navigator.push(

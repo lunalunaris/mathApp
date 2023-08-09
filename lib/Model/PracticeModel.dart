@@ -21,8 +21,7 @@ class PracticeModel {
       required this.result,
       required this.resultImg,
       required this.solutions,
-      required this.section,
-      required this.lang});
+     });
 
   PracticeModel.fromMap(Map<String, dynamic> result)
       : id = result["id"],
@@ -31,9 +30,7 @@ class PracticeModel {
         equation = result["equation"],
         img = result["img"].result = result["result"],
         resultImg = result["resultImg"],
-        solutions = result["solutions"],
-        section = result["section"],
-        lang = result["lang"];
+        solutions = result["solutions"];
 
   Map<String, Object> toMap() {
     return {
@@ -45,8 +42,6 @@ class PracticeModel {
       'result': result,
       'resultImg': resultImg,
       'solutions': solutions,
-      'section': section,
-      'lang': lang
     };
   }
 
@@ -63,9 +58,7 @@ class PracticeModel {
         img: data?["img"],
         result: data?['result'],
         resultImg: data?['resultImg'],
-        solutions: data?['solutions'],
-        section: data?['section'],
-        lang: data?['lang']);
+        solutions: data?['solutions']);
   }
 
   Map<String, dynamic> toFirestore() {
@@ -76,8 +69,6 @@ class PracticeModel {
       if (img != null) "img": img,
       if (result != null) "result": result,
       if (resultImg != null) "resultImg": resultImg,
-      if (solutions != null) "solutions": solutions,
-      if (lang != null) "lang": lang,
     };
   }
 }

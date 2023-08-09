@@ -1,47 +1,132 @@
+
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:math/Model/PracticeModel.dart';
+import 'package:math/Model/TopicModel.dart';
 
-class Practice extends StatefulWidget {
-  const Practice({Key? key}) : super(key: key);
+class Practice extends StatefulWidget{
+  late TopicModel topic;
 
   @override
-  State<Practice> createState() => _PracticeState();
+  State<Practice> createState() => _Practice();
+
+  Practice({Key? key, required this.topic}) : super(key: key);
+
 }
-// final String defaultLocale = Platform.localeName;
 
-class _PracticeState extends State<Practice> {
-  List<PracticeModel> tasks=[PracticeModel(id: "1", topicId: "1", content: "example task text 1", img: "https://www.google.com/url?sa=i&url=https%3A%2F%2Fen.wikipedia.org%2Fwiki%2FIsosceles_triangle&psig=AOvVaw1bRqyf4vVJ2UPMkNzMFCKn&ust=1691423243620000&source=images&cd=vfe&opi=89978449&ved=0CBEQjRxqFwoTCIDVpeCwyIADFQAAAAAdAAAAABAD", result: "5", solutions: "2+3=5, 1+4=5", resultImg: '', equation: '', section: '', lang: 'en_UK'),
-  PracticeModel(id: "2", topicId: "1", content: "some example task 2", img: "null", result: "16", solutions: "10+6=16, 5+6+5=16",equation: '', resultImg: '', section: '', lang: 'en_UK'),
-  PracticeModel(id: "3", topicId: "1", content: "some example 3", img: "null", result: "9", solutions: "", equation: '', resultImg: '', section: '', lang: 'en_UK')];
-  bool test = true;
-  testView(PracticeModel practice){
-    return Column(
-      children: [
-        Text(practice.content)
-      ],
-    );
-  }
-  
+class _Practice extends State<Practice>{
+  late User? user;
+  late TopicModel topic;
+  FirebaseFirestore db = FirebaseFirestore.instance;
+  final responseController = TextEditingController();
+  bool flag=true;
   @override
-  void initState() {
+  void initState(){
+    topic=widget.topic;
+    user = FirebaseAuth.instance.currentUser;
     super.initState();
+
   }
+
   @override
   Widget build(BuildContext context) {
-     return Scaffold(
-        appBar: AppBar(
-          title: const Text("Learning"),
-        ),
-        body: Center(
-            child: Column(
-                mainAxisAlignment: MainAxisAlignment.center, children: const [
-              Text("Practice", style: TextStyle(
-                  fontSize: 30, fontWeight: FontWeight.bold, color: Colors.pink)
-              )
-            ]
-            )));
+    var responseTxt = responseController.text;
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(
+        title: const Text("Practice"),
+      ),
+      body: Container(
+          decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.pink.shade500.withOpacity(0.8),
+                  Colors.teal.shade100.withOpacity(0.8),
+                ],
+              )),
+          child: Container(
+            padding: const EdgeInsets.all(10),
+            margin: const EdgeInsets.all(30),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10.0),
+              color: Colors.white.withOpacity(0.8),
+            ),
+            child: Column (
+              children: [flag==true?buildSingleChildScrollView() : buildResultView()]
+            )
+
+      )
+      ),
+    );
   }
+  SingleChildScrollView buildResultView() {
+    return SingleChildScrollView(child: Container(
+      child: Column(
+        children: [
+          Text(flag==true?"correct":"incorrect"),
+          Text("true result (convert to tex)"),
+          Text("suggested solutions (convert to tex)"),
+          Text("Your result, if read from photo, if not from input"),
+          ElevatedButton(onPressed: (){}, child: Text("Next")),
+          if(!flag)
+            ElevatedButton(onPressed: (){}, child: Text("Try again?"))
+        ],
+      ),
+    ));
+  }
+
+
+  SingleChildScrollView buildSingleChildScrollView() {
+    return SingleChildScrollView(
+            child: Column(
+              children: [
+                Text("example task"),
+                //math render
+                Container(
+                  margin: EdgeInsets.only(top: 20),
+                  height: 200,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20.0),),
+                  child: Image.network("https://mathmonks.com/wp-content/uploads/2020/03/Triangle.jpg"),
+
+                ),
+                TextFormField(
+                  controller: responseController,
+                ),
+                Container(
+                  margin: EdgeInsets.only(top: 30),
+                  child: ElevatedButton(onPressed: (){}, child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: const [
+                      Padding(
+                        padding: EdgeInsets.all(4.0),
+                        child: Icon(Icons.camera_alt_rounded),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.all(2.0),
+                        child: Text("submit photo of solution"),
+                      )
+                    ],
+                  )),
+                ),
+                Container(
+                  margin: EdgeInsets.only(top: 30),
+                    padding: EdgeInsets.all(8),
+                    child: ElevatedButton(onPressed: (){ flag=false;  setState(() {});}, child: Text("Submit answer")))
+              ],
+            )
+            ,
+          );
+  }
+
 }
-
-
+//text
+//math render
+//image
+//math input
+//camera input

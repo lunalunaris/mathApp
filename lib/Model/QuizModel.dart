@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:ffi';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -23,8 +22,7 @@ class QuizModel {
       required this.equation,
       required this.img,
       required this.result,
-      required this.solutions,
-      required this.lang});
+      required this.solutions});
 
   QuizModel.fromMap(Map<String, dynamic> result)
       : id = result["id"],
@@ -34,8 +32,7 @@ class QuizModel {
         equation = result["equation"],
         img = result["img"],
         result = result["result"],
-        solutions = result["solutions"],
-        lang = result["lang"];
+        solutions = result["solutions"];
 
   // solutions = json.decode(result["solutions"]).cast<String>().toList();
   Map<String, Object> toMap() {
@@ -48,7 +45,6 @@ class QuizModel {
       'img': img,
       'result': result,
       'solutions': solutions,
-      'lang': lang
     };
   }
 
@@ -58,15 +54,15 @@ class QuizModel {
   ) {
     final data = snapshot.data();
     return QuizModel(
-        id: snapshot.id,
-        topicId: data?['topicId'],
-        section: data?['section'],
-        content: data?['content'],
-        equation: data?['equation'],
-        img: data?["img"],
-        result: data?['result'],
-        solutions: data?['solutions'],
-        lang: data?['lang']);
+      id: snapshot.id,
+      topicId: data?['topicId'],
+      section: data?['section'],
+      content: data?['content'],
+      equation: data?['equation'],
+      img: data?["img"],
+      result: data?['result'],
+      solutions: data?['solutions'],
+    );
   }
 
   Map<String, dynamic> toFirestore() {
@@ -78,7 +74,6 @@ class QuizModel {
       if (img != null) "img": img,
       if (result != null) "result": result,
       if (solutions != null) "solutions": solutions,
-      if (lang != null) "lang": lang
     };
   }
 }
