@@ -2,25 +2,27 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:math/Model/SectionModel.dart';
 import 'package:math/UI/learning/quiz.dart';
+import 'package:math/UI/learning/quiz_section.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 
-import '../../Model/TopicModel.dart';
 
 
-class QuizResults extends StatefulWidget {
-  late TopicModel topic;
+
+class QuizSectionResults extends StatefulWidget {
+  late SectionModel section;
   late double percent;
 
   @override
-  State<QuizResults> createState() => _QuizResults();
+  State<QuizSectionResults> createState() => _QuizSectionResults();
 
-  QuizResults({Key? key, required this.topic, required this.percent})
+  QuizSectionResults({Key? key, required this.section, required this.percent})
       : super(key: key);
 }
 
-class _QuizResults extends State<QuizResults> {
-  late TopicModel topic;
+class _QuizSectionResults extends State<QuizSectionResults> {
+  late SectionModel section;
   late double percent;
   late User? user;
   FirebaseFirestore db = FirebaseFirestore.instance;
@@ -28,17 +30,17 @@ class _QuizResults extends State<QuizResults> {
 
   @override
   void initState() {
-    topic = widget.topic;
+    section = widget.section;
     percent = widget.percent;
     user = FirebaseAuth.instance.currentUser;
-    completedTopics(topic.id);
+    completedSections(section.id);
     super.initState();
   }
 
-  Future<void> completedTopics(String topicId) async {
+  Future<void> completedSections(String sectionId) async {
     db
-        .collection("TopicQuizCompleted")
-        .add({"user": user!.uid, "topic": topicId});
+        .collection("SectionQuizCompleted")
+        .add({"user": user!.uid, "section": sectionId});
   }
 
   @override
@@ -52,13 +54,13 @@ class _QuizResults extends State<QuizResults> {
         body: Container(
             decoration: BoxDecoration(
                 gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Colors.pink.shade500.withOpacity(0.8),
-                Colors.teal.shade100.withOpacity(0.8),
-              ],
-            )),
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.pink.shade500.withOpacity(0.8),
+                    Colors.teal.shade100.withOpacity(0.8),
+                  ],
+                )),
             child: Container(
                 padding: const EdgeInsets.all(10),
                 margin: const EdgeInsets.all(30),
@@ -100,9 +102,9 @@ class _QuizResults extends State<QuizResults> {
                               Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                      builder: (context) => Quiz(
-                                            topic: topic,
-                                          )));
+                                      builder: (context) => QuizSection(
+                                        section: section,
+                                      )));
                             },
                             child: const Text("Try again?"))),
                     Container(

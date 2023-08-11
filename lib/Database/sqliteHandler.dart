@@ -15,12 +15,13 @@
 //       version: 1,
 //       onCreate: (Database db, int version) async {
 //         await db.execute(
-//             'CREATE TABLE savedPractice(id TEXT PRIMARY KEY, topicId TEXT, content TEXT, img TEXT, result TEXT, solutions TEXT);'
+//             // 'CREATE TABLE savedPractice(id TEXT PRIMARY KEY, topicId TEXT, content TEXT, img TEXT, result TEXT, solutions TEXT);'
 //
-//             'CREATE TABLE completedTask(id TEXT PRIMARY KEY); '
-//             'CREATE TABLE topics(id TEXT PRIMARY KEY, name TEXT, sectionId TEXT, completed BOOLEAN);'
-//             'CREATE TABLE sections(id TEXT PRIMARY KEY, name TEXT, levelId TEXT, completed BOOLEAN);'
-//             'CREATE TABLE levels(id TEXT PRIMARY KEY, name TEXT, completed BOOLEAN)');
+//             'CREATE TABLE completedTopic(id TEXT PRIMARY KEY);'
+//             'CREATE TABLE completedSection(id '
+//             // 'CREATE TABLE topics(id TEXT PRIMARY KEY, name TEXT, sectionId TEXT, completed BOOLEAN);'
+//             // 'CREATE TABLE sections(id TEXT PRIMARY KEY, name TEXT, levelId TEXT, completed BOOLEAN);'
+//             'CREATE TABLE level(id TEXT PRIMARY KEY, name TEXT)');
 //       },
 //     );
 //   }

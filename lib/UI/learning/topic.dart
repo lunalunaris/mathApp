@@ -32,7 +32,6 @@ class _Topic extends State<Topic> {
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
@@ -41,13 +40,13 @@ class _Topic extends State<Topic> {
         body: Container(
             decoration: BoxDecoration(
                 gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Colors.pink.shade500.withOpacity(0.8),
-                Colors.teal.shade100.withOpacity(0.8),
-              ],
-            )),
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.pink.shade500.withOpacity(0.8),
+                    Colors.teal.shade100.withOpacity(0.8),
+                  ],
+                )),
             child: Container(
               padding: const EdgeInsets.all(10),
               margin: const EdgeInsets.all(30),
@@ -58,50 +57,54 @@ class _Topic extends State<Topic> {
               ),
               child: Container(
                 margin: const EdgeInsets.only(left: 10, right: 10),
-                width: MediaQuery.of(context).size.width * 0.8,
+                width: MediaQuery
+                    .of(context)
+                    .size
+                    .width * 0.8,
                 child: Column(
                   children: [
                     GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => Theory(topic: topic,)));
-                      },
-                      child: Container(
-                          padding: const EdgeInsets.all(8),
-                          margin: const EdgeInsets.all(10),
-                          alignment: Alignment.center,
-                          width: 300,
-                          height: 150,
-                          decoration: const BoxDecoration(
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(10)),
-                              image: DecorationImage(
-                                  fit: BoxFit.cover,
-                                  image: AssetImage("assets/theory.png"))),
-                          child: Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Colors.purple.shade900.withOpacity(0.7),
-                              borderRadius:
-                                  const BorderRadius.all(Radius.circular(10)),
-                            ),
-                            child: const Text(
-                              "Theory",
-                              style: TextStyle(
-                                  fontSize: 25,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white),
-                            ),
-                          )),
-                    ),
+                    onTap: () {
+              Navigator.push(
+              context,
+              MaterialPageRoute(
+              builder: (context) => Theory(topic: topic,)));
+              },
+                child: Container(
+                    padding: const EdgeInsets.all(8),
+                    margin: const EdgeInsets.all(10),
+                    alignment: Alignment.center,
+                    width: 300,
+                    height: 150,
+                    decoration: const BoxDecoration(
+                        borderRadius:
+                        BorderRadius.all(Radius.circular(10)),
+                        image: DecorationImage(
+                            fit: BoxFit.cover,
+                            image: AssetImage("assets/theory.png"))),
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.purple.shade900.withOpacity(0.7),
+                        borderRadius:
+                        const BorderRadius.all(Radius.circular(10)),
+                      ),
+                      child: const Text(
+                        "Theory",
+                        style: TextStyle(
+                            fontSize: 25,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white),
+                      ),
+                    )),
+              ),
                     GestureDetector(
                       onTap: () {
                         Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => Practice(topic: topic,)));;
+                                builder: (context) => Practice(topic: topic,)));
+                        ;
                       },
                       child: Container(
                           padding: const EdgeInsets.all(8),
@@ -111,7 +114,7 @@ class _Topic extends State<Topic> {
                           height: 150,
                           decoration: const BoxDecoration(
                               borderRadius:
-                                  BorderRadius.all(Radius.circular(10)),
+                              BorderRadius.all(Radius.circular(10)),
                               image: DecorationImage(
                                   fit: BoxFit.cover,
                                   image: AssetImage("assets/theory.png"))),
@@ -120,7 +123,7 @@ class _Topic extends State<Topic> {
                             decoration: BoxDecoration(
                               color: Colors.purple.shade900.withOpacity(0.7),
                               borderRadius:
-                                  const BorderRadius.all(Radius.circular(10)),
+                              const BorderRadius.all(Radius.circular(10)),
                             ),
                             child: const Text(
                               "Practice",
@@ -146,7 +149,7 @@ class _Topic extends State<Topic> {
                           height: 150,
                           decoration: const BoxDecoration(
                               borderRadius:
-                                  BorderRadius.all(Radius.circular(10)),
+                              BorderRadius.all(Radius.circular(10)),
                               image: DecorationImage(
                                   fit: BoxFit.cover,
                                   image: AssetImage("assets/theory.png"))),
@@ -155,7 +158,7 @@ class _Topic extends State<Topic> {
                             decoration: BoxDecoration(
                               color: Colors.purple.shade900.withOpacity(0.7),
                               borderRadius:
-                                  const BorderRadius.all(Radius.circular(10)),
+                              const BorderRadius.all(Radius.circular(10)),
                             ),
                             child: const Text(
                               "Quiz",
@@ -197,14 +200,14 @@ class _Topic extends State<Topic> {
                       MaterialPageRoute(
                           builder: (context) => const Learning()));
                   break;
-                // case 2:
-                //   Navigator.of(context).pop();
-                //   Navigator.push(
-                //       context,
-                //       MaterialPageRoute(
-                //           builder: (context) =>
-                //               Game(user: user)));
-                //   break;
+              // case 2:
+              //   Navigator.of(context).pop();
+              //   Navigator.push(
+              //       context,
+              //       MaterialPageRoute(
+              //           builder: (context) =>
+              //               Game(user: user)));
+              //   break;
                 case 2:
                   Navigator.of(context).pop();
                   Navigator.push(
@@ -216,4 +219,5 @@ class _Topic extends State<Topic> {
             },
             selectedItemColor: Colors.pink));
   }
+
 }

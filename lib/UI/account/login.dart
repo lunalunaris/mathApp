@@ -7,9 +7,7 @@ import 'package:math/UI/account/register.dart';
 import 'package:math/UI/learning/level_choice.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
-
-import '../../Model/TopicModel.dart';
+import 'dart:io';
 
 class Login extends StatelessWidget {
   const Login({Key? key}) : super(key: key);
@@ -26,18 +24,20 @@ class Login extends StatelessWidget {
         ),
       ),
       backgroundColor: Colors.white,
-      body:  Scaffold(
-        body:  Container(
-    decoration: BoxDecoration(
-    gradient: LinearGradient(
-    begin: Alignment.topCenter,
-    end: Alignment.bottomCenter,
-    colors: [
-    Colors.pink.shade500.withOpacity(0.8),
-    Colors.teal.shade100.withOpacity(0.8),
-    ],
-    )),
-            child: const UserForm(),),
+      body: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: Container(
+          decoration: BoxDecoration(
+              gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.pink.shade500.withOpacity(0.8),
+              Colors.teal.shade100.withOpacity(0.8),
+            ],
+          )),
+          child: const UserForm(),
+        ),
       ),
     );
   }
@@ -50,37 +50,26 @@ class UserForm extends StatefulWidget {
   State<UserForm> createState() => _UserForm();
 }
 
-User? user = null;
-
 class _UserForm extends State<UserForm> {
+  User? user;
+
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
-  @override
+  FirebaseFirestore db = FirebaseFirestore.instance;
+  late String level;
+  late String lang;
 
+  @override
   signIn(BuildContext context) async {
     var email = emailController.text;
     var password = passwordController.text;
-    //login the user, then:
-    // const callerUid = context.auth.uid;  //uid of the user calling the Cloud Function
-    // const callerUserRecord = await admin.auth().getUser(callerUid);
-    // if (!callerUserRecord.customClaims.admin) {
-    //   throw new NotAnAdminError('Only Admin users can create new users.');
-    // set custom claims/roles for users who have already chosen the level
-
-
     try {
-      final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
-          email: email,
-          password: password
-      );
+      final credential = await FirebaseAuth.instance
+          .signInWithEmailAndPassword(email: email, password: password);
 
       if (!mounted) return;
       Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (context) => LevelChoice(
-                user: FirebaseAuth.instance.currentUser,
-              )));
+          context, MaterialPageRoute(builder: (context) => LevelChoice()));
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
         print('No user found for that email.');
@@ -88,7 +77,6 @@ class _UserForm extends State<UserForm> {
         print('Wrong password provided for that user.');
       }
     }
-
 
     // displayDialog(context, "Incorrect Input", "Invalid credentials");
   }
@@ -107,128 +95,141 @@ class _UserForm extends State<UserForm> {
       print("completed");
       setState(() {});
     });
+    lang = Platform.localeName;
+    initLevel();
     super.initState();
+  }
+
+  initLevel() async {
+    await db
+        .collection("UserLevel")
+        .doc(user?.uid)
+        .get()
+        .then((querySnapshot) async {
+      print("level completed");
+      level = querySnapshot["level"];
+      setState(() {});
+    });
+
   }
 
   @override
   Widget build(BuildContext context) {
-    return
-       SingleChildScrollView(
-
-          padding: EdgeInsets.all(10),
-
-            child: Container(
-              padding: const EdgeInsets.all(5),
-              margin: const EdgeInsets.all(30),
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10.0),
-                color: Colors.white.withOpacity(0.8),
-              ),
-              child: Column(
-                children: [
-                  const SizedBox(
-                    height: 150,
-                  ),
-                  const Text("Log in",
-                      style: TextStyle(
-                          fontSize: 30,
-                          color: Colors.pink,
-                          fontWeight: FontWeight.bold)),
-                  const SizedBox(
-                    height: 20,
-                  ),
-                  const Text("Welcome back",
-                      style: TextStyle(fontSize: 20, color: Colors.teal)),
-                  const SizedBox(
-                    height: 30,
-                  ),
-                  SizedBox(
-                    width: 300,
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: TextField(
-                          controller: emailController,
-                          decoration: InputDecoration(
-                            contentPadding: const EdgeInsets.symmetric(
-                                vertical: 10, horizontal: 20),
-                            border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10.0)),
-                            hintText: "Email",
-                          )),
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 20,
-                  ),
-                  SizedBox(
-                    width: 300,
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: TextField(
-                          obscureText: true,
-                          enableSuggestions: false,
-                          autocorrect: false,
-                          controller: passwordController,
-                          decoration: InputDecoration(
-                              contentPadding: const EdgeInsets.symmetric(
-                                  vertical: 10, horizontal: 20),
-                              border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(10.0)),
-                              hintText: "password")),
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 40,
-                  ),
-                  ElevatedButton(
-                      onPressed: () {
-                        signIn(context);
-                      },
-                      style: ButtonStyle(
-                          fixedSize: MaterialStateProperty.all(const Size(200, 50)),
-                          backgroundColor: MaterialStateProperty.all(Colors.teal),
-                          shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                              RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ))),
-                      child: const Text(
-                        "Login",
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                      )),
-                  SizedBox(
-                    height: 20,
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      TextButton(
-                          onPressed: () {
-                            Navigator.push(context,
-                                MaterialPageRoute(builder: (context) => Register()));
-                          },
-                          child: Text("Register",
-                              style: TextStyle(fontSize: 20, color: Colors.teal))),
-                      SizedBox(width: 20),
-                      Container(
-                        margin: EdgeInsets.all(20),
-                        child: TextButton(
-                            onPressed: () {
-                              Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => RecoverPasswd()));
-                            },
-                            child: const Text(
-                              "Forgot password?",
-                              style: TextStyle(fontSize: 20, color: Colors.teal),
-                            )),
-                      )
-                    ],
-                  )
-                ],
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(10),
+      child: Container(
+        padding: const EdgeInsets.all(5),
+        margin: const EdgeInsets.all(30),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10.0),
+          color: Colors.white.withOpacity(0.8),
+        ),
+        child: Column(
+          children: [
+            const SizedBox(
+              height: 150,
+            ),
+            const Text("Log in",
+                style: TextStyle(
+                    fontSize: 30,
+                    color: Colors.pink,
+                    fontWeight: FontWeight.bold)),
+            const SizedBox(
+              height: 20,
+            ),
+            const Text("Welcome back",
+                style: TextStyle(fontSize: 20, color: Colors.teal)),
+            const SizedBox(
+              height: 30,
+            ),
+            SizedBox(
+              width: 300,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: TextField(
+                    controller: emailController,
+                    decoration: InputDecoration(
+                      contentPadding: const EdgeInsets.symmetric(
+                          vertical: 10, horizontal: 20),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10.0)),
+                      hintText: "Email",
+                    )),
               ),
             ),
-          );
+            const SizedBox(
+              height: 20,
+            ),
+            SizedBox(
+              width: 300,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: TextField(
+                    obscureText: true,
+                    enableSuggestions: false,
+                    autocorrect: false,
+                    controller: passwordController,
+                    decoration: InputDecoration(
+                        contentPadding: const EdgeInsets.symmetric(
+                            vertical: 10, horizontal: 20),
+                        border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10.0)),
+                        hintText: "password")),
+              ),
+            ),
+            const SizedBox(
+              height: 40,
+            ),
+            ElevatedButton(
+                onPressed: () {
+                  signIn(context);
+                },
+                style: ButtonStyle(
+                    fixedSize: MaterialStateProperty.all(const Size(200, 50)),
+                    backgroundColor: MaterialStateProperty.all(Colors.teal),
+                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                        RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ))),
+                child: const Text(
+                  "Login",
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                )),
+            const SizedBox(
+              height: 10,
+            ),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const Register()));
+                    },
+                    child: const Text("Register",
+                        style: TextStyle(fontSize: 18, color: Colors.teal))),
+                Container(
+                  margin: const EdgeInsets.all(10),
+                  child: TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const RecoverPasswd()));
+                      },
+                      child: const Text(
+                        "Forgot password?",
+                        style: TextStyle(fontSize: 18, color: Colors.teal),
+                      )),
+                )
+              ],
+            )
+          ],
+        ),
+      ),
+    );
   }
 }

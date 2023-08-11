@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:math/UI/account/login.dart';
+import 'package:math/UI/admin/adminInit.dart';
 import 'package:math/UI/learning/learning.dart';
 import 'package:math/UI/learning/level_choice.dart';
 import 'dart:developer' as developer;
@@ -16,18 +17,69 @@ class UserSettings extends StatefulWidget {
 
 class _Settings extends State<UserSettings> {
   late User? user;
+  late String userRole="";
   FirebaseFirestore db = FirebaseFirestore.instance;
 
   @override
   void initState() {
     user = FirebaseAuth.instance.currentUser;
+    initRole();
     super.initState();
   }
 
   clearProgress() {
-    //delete stuff associated with user in fb
+    clearPractice();
+    clearSection();
+    clearTopic();
   }
 
+  initRole() async {
+    await db
+        .collection("UserRole")
+        .doc(user?.uid)
+        .get()
+        .then((querySnapshot) async {
+      print("role completed");
+      userRole = querySnapshot["role"];
+      print(userRole);
+      setState(() {});
+    });
+  }
+
+
+  Future<void> clearPractice() async {
+    var collection = FirebaseFirestore.instance.collection('PracticeCompleted').where(
+        "user", isEqualTo: user?.uid);
+    var snapshots = await collection.get();
+    for (var doc in snapshots.docs) {
+      await doc.reference.delete();
+    }
+  }
+  Future<void> clearSection() async {
+    var collection = FirebaseFirestore.instance.collection('SectionQuizCompleted').where(
+        "user", isEqualTo: user?.uid);
+    var snapshots = await collection.get();
+    for (var doc in snapshots.docs) {
+      await doc.reference.delete();
+    }
+  }
+  Future<void> clearTopic() async {
+    var collection = FirebaseFirestore.instance.collection('TopicQuizCompleted').where(
+        "user", isEqualTo: user?.uid);
+    var snapshots = await collection.get();
+    for (var doc in snapshots.docs) {
+      await doc.reference.delete();
+    }
+  }
+  Future<void> _signOut() async {
+    await FirebaseAuth.instance.signOut();
+  }
+  signOutUser(){
+    _signOut();
+    Navigator.of(context).pop();
+    Navigator.push(context,
+        MaterialPageRoute(builder: (context) => Login()));
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -62,7 +114,10 @@ class _Settings extends State<UserSettings> {
                   ListTile(
                     leading: const Icon(Icons.change_circle_outlined),
                     title: TextButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.push(context,
+                              MaterialPageRoute(builder: (context) => LevelChoice()));
+                        },
                         style: ButtonStyle(
                             backgroundColor: MaterialStateProperty.all(
                                 Colors.white.withOpacity(0.1)),
@@ -83,7 +138,9 @@ class _Settings extends State<UserSettings> {
                   ListTile(
                     leading: const Icon(Icons.cleaning_services_rounded),
                     title: TextButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          clearProgress(); //implement some kind of notification
+                        },
                         style: ButtonStyle(
                             backgroundColor: MaterialStateProperty.all(
                                 Colors.white.withOpacity(0.1)),
@@ -105,7 +162,9 @@ class _Settings extends State<UserSettings> {
                   ListTile(
                     leading: const Icon(Icons.logout_rounded),
                     title: TextButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          signOutUser();
+                        },
                         style: ButtonStyle(
                             backgroundColor: MaterialStateProperty.all(
                                 Colors.white.withOpacity(0.1)),
@@ -123,7 +182,31 @@ class _Settings extends State<UserSettings> {
                         )),
                   ),
                   Divider(height: 0,),
-
+                  if(userRole=="admin")
+                  ListTile(
+                    leading: const Icon(Icons.admin_panel_settings_rounded),
+                    title: TextButton(
+                        onPressed: () {
+                          Navigator.push(
+                              context, MaterialPageRoute(builder: (context) =>  AdminInit()));
+                        },
+                        style: ButtonStyle(
+                            backgroundColor: MaterialStateProperty.all(
+                                Colors.white.withOpacity(0.1)),
+                            shape:
+                            MaterialStateProperty.all<RoundedRectangleBorder>(
+                                const RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.all(Radius.circular(5)),
+                                ))),
+                        child: const Text(
+                          "Admin panel",
+                          style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black54),
+                        )),
+                  ),
+                  Divider(height: 0,),
                 ],
               ),
             ),

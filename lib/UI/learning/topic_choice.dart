@@ -8,7 +8,7 @@ import 'package:math/UI/learning/topic.dart';
 import 'dart:developer' as developer;
 import '../../Model/TopicModel.dart';
 import '../settings/settings.dart';
-import 'dart:typed_data';
+
 
 import 'learning.dart';
 
@@ -24,13 +24,14 @@ class TopicChoice extends StatefulWidget {
 class _TopicChoice extends State<TopicChoice> {
   FirebaseFirestore db = FirebaseFirestore.instance;
   late User? user;
+
   late SectionModel section;
   late FirestoreHandler fs = FirestoreHandler();
 
   late List<TopicModel> topics = [
     TopicModel(id: "temo", name: "Loading...", sectionId: "temp", lang: "en_US")
   ];
-
+  late List<String> completedTopics=[];
   @override
   void initState() {
     user =FirebaseAuth.instance.currentUser;
@@ -46,18 +47,22 @@ class _TopicChoice extends State<TopicChoice> {
         .where("section", isEqualTo: section.id)
         .where("lang", isEqualTo: "en_US")
         .get()
-        .then((querySnapshot) {
+        .then((querySnapshot) async {
       print("topics by section completed");
       topics = [];
       for (var docSnapshot in querySnapshot.docs) {
-        print(docSnapshot.data());
         topics.add(TopicModel(
             id: docSnapshot.id,
             name: docSnapshot.data()["name"],
             lang: docSnapshot.data()["lang"],
             sectionId: docSnapshot.data()["section"]));
-        print(topics.length);
-      }
+
+        }
+      await db.collection("TopicQuizCompleted").where("user", isEqualTo: user?.uid).get().then((value) async{
+        for(var item in value.docs){
+          completedTopics.add(item["topic"]);
+        }
+      });
     }, onError: (e) => print("Error fetching topics by section"));
     setState(() {});
   }
@@ -95,7 +100,7 @@ class _TopicChoice extends State<TopicChoice> {
                 for (var i in topics)
                   Column(children: [
                     ListTile(
-                      leading: const Icon(Icons.star_border),
+                      leading:  Icon(Icons.stars,color: completedTopics.contains(i.id)?Colors.cyan:Colors.black45),
                       title: TextButton(
                           onPressed: () {Navigator.push(
                               context,
