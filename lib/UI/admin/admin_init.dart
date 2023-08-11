@@ -2,6 +2,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:math/UI/admin/section_choice_admin.dart';
 import 'package:math/UI/learning/learning.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -26,7 +27,7 @@ class _AdminInitState extends State<AdminInit> {
     "Skoła średnia poziom rozszerzony": "4"
   };
   var languageList = ["en_GB", "pl_PL"];
-  var typeList = ["section", "topic", "theory", "practice", "quiz"];
+  var typeList = ["section", "topic", "theory", "practice", "quiz","section quiz"];
   String typeDropdown = "";
   String classDropdown = "";
   String langDropdown = "";
@@ -35,20 +36,24 @@ class _AdminInitState extends State<AdminInit> {
   TextEditingController controller = TextEditingController();
 
   next() {
-    print(typeDropdown);
+
     if (typeDropdown == "section") {
       flag = true;
-
       setState(() {});
     }
      else {
-      // Navigator.push(
-      //     context,
-      //     MaterialPageRoute(
-      //         builder: (context) => ChooseSection(
-      //             level: levelList[classDropdown],
-      //             lang: langDropdown,
-      //             type: typeDropdown)));
+
+       String? temp =levelList[classDropdown];
+       print(temp);
+       print(langDropdown);
+       print(typeDropdown);
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => SectionChoice(
+                  level: temp,
+                  lang: langDropdown,
+                  type: typeDropdown)));
     }
   }
   Future<void> addSection() async {
@@ -105,11 +110,10 @@ class _AdminInitState extends State<AdminInit> {
   }
 
   Column buildInput() {
-    String title = "Submit name for your " + typeDropdown;
     return Column(
       children: [
-        Text(
-          title,
+        const Text(
+          "Submit name for your section",
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
         TextFormField(
@@ -124,7 +128,7 @@ class _AdminInitState extends State<AdminInit> {
                )),
         ElevatedButton(onPressed: (){
           submitToDB();
-        }, child: Text("Submit"))
+        }, child: const Text("Submit"))
       ],
     );
   }
@@ -133,7 +137,7 @@ class _AdminInitState extends State<AdminInit> {
     return Column(
       children: [
         Container(
-          margin: EdgeInsets.all(40),
+          margin: const EdgeInsets.all(40),
           child: DropdownButton<String>(
             value: classDropdown,
             icon: const Icon(Icons.arrow_downward),
@@ -157,7 +161,7 @@ class _AdminInitState extends State<AdminInit> {
           ),
         ),
         Container(
-          margin: EdgeInsets.all(40),
+          margin: const EdgeInsets.all(40),
           child: DropdownButton<String>(
             value: langDropdown,
             icon: const Icon(Icons.arrow_downward),
@@ -182,7 +186,7 @@ class _AdminInitState extends State<AdminInit> {
           ),
         ),
         Container(
-          margin: EdgeInsets.all(40),
+          margin: const EdgeInsets.all(40),
           child: DropdownButton<String>(
             value: typeDropdown,
             icon: const Icon(Icons.arrow_downward),
@@ -207,7 +211,7 @@ class _AdminInitState extends State<AdminInit> {
             }).toList(),
           ),
         ),
-        ElevatedButton(onPressed: () {next();}, child: Text("Next"))
+        ElevatedButton(onPressed: () {next();}, child: const Text("Next"))
       ],
     );
   }

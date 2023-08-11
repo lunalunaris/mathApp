@@ -1,35 +1,36 @@
-import 'dart:io';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:math/Database/FireStoreHandler.dart';
 import 'package:math/Model/SectionModel.dart';
+import 'package:math/UI/admin/upload.dart';
 import 'package:math/UI/learning/topic.dart';
 import 'dart:developer' as developer;
 import '../../Model/TopicModel.dart';
 import '../settings/settings.dart';
 
 
-import 'learning.dart';
 
-class TopicChoice extends StatefulWidget {
+
+class TopicChoiceAdmin extends StatefulWidget {
   late SectionModel section;
-
-  TopicChoice({Key? key, required this.section}) : super(key: key);
+  late String lang;
+  late String type;
+  TopicChoiceAdmin({Key? key, required this.section, required this.lang, required this.type}) : super(key: key);
 
   @override
-  State<TopicChoice> createState() => _TopicChoice();
+  State<TopicChoiceAdmin> createState() => _TopicChoiceAdmin();
 }
 
-class _TopicChoice extends State<TopicChoice> {
+class _TopicChoiceAdmin extends State<TopicChoiceAdmin> {
   FirebaseFirestore db = FirebaseFirestore.instance;
   late User? user;
-
+  late String lang;
+  late String type;
   late SectionModel section;
   late FirestoreHandler fs = FirestoreHandler();
-  late String lang;
+
   late List<TopicModel> topics = [
     TopicModel(id: "temo", name: "Loading...", sectionId: "temp", lang: "en_US")
   ];
@@ -38,7 +39,8 @@ class _TopicChoice extends State<TopicChoice> {
   void initState() {
     user =FirebaseAuth.instance.currentUser;
     section = widget.section;
-    lang = Platform.localeName;
+    lang= widget.lang;
+    type=widget.type;
     initTopicList(section);
     super.initState();
   }
@@ -59,15 +61,17 @@ class _TopicChoice extends State<TopicChoice> {
             name: docSnapshot.data()["name"],
             lang: docSnapshot.data()["lang"],
             sectionId: docSnapshot.data()["section"]));
-
-        }
-      await db.collection("TopicQuizCompleted").where("user", isEqualTo: user?.uid).get().then((value) async{
-        for(var item in value.docs){
-          completedTopics.add(item["topic"]);
-        }
-      });
+      }
     }, onError: (e) => print("Error fetching topics by section"));
     setState(() {});
+  }
+  next(TopicModel topicModel){
+
+    Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) =>
+                Upload( type: type, container: topicModel.id,)));
   }
 
   @override
@@ -98,18 +102,18 @@ class _TopicChoice extends State<TopicChoice> {
             child: ListView(
               children: [
                 Container(padding: EdgeInsets.all(10),alignment: Alignment.center,
-                    child: Text("Choose topic", style: TextStyle(fontSize: 20,fontWeight: FontWeight.bold,color: Colors.teal.withOpacity(0.7)),)),
+                    child: Text("Choose topic", style: TextStyle(fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.teal.withOpacity(0.7)),)),
                 const Divider(height: 0,indent: 40, endIndent: 40,color: Colors.teal,),
                 for (var i in topics)
                   Column(children: [
                     ListTile(
-                      leading:  Icon(Icons.stars,color: completedTopics.contains(i.id)?Colors.cyan:Colors.black45),
+                      leading:  Icon(Icons.stars,),
                       title: TextButton(
-                          onPressed: () {Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) =>
-                                   Topic(topic: i)));},
+                          onPressed: () {
+                            next(i);
+                          },
                           style: ButtonStyle(
                               backgroundColor: MaterialStateProperty.all(
                                   Colors.white.withOpacity(0.1)),
@@ -134,58 +138,7 @@ class _TopicChoice extends State<TopicChoice> {
             ),
           ),
         ),
-        bottomNavigationBar: BottomNavigationBar(
-            backgroundColor: Colors.teal.shade400,
-            selectedItemColor: Colors.pink.withOpacity(0.8),
-            currentIndex: 0,
-            unselectedItemColor: Colors.teal.shade900.withOpacity(0.8),
-            items: const <BottomNavigationBarItem>[
-              BottomNavigationBarItem(
-                icon: Icon(Icons.book),
-                label: "Learn",
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.games),
-                label: "Game",
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.settings),
-                label: "Setup",
-              ),
-            ],
-            onTap: (option) {
-              switch (option) {
-              case 0:
-                Navigator.of(context).pop();
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) =>
-                            const Learning()));
-                break;
-                case 2:
-                  Navigator.of(context).pop();
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => UserSettings()));
-                  break;
-              }
-            }));
+      );
   }
 }
 
-// child: ExpansionPanelList.radio(
-// children: contentList.keys.map(
-// (section) =>
-// ExpansionPanelRadio(
-// value: section.id,
-// headerBuilder: (context, isExpanded) =>
-// ListTile(
-// title: Text(section.name),
-// ),
-// body:
-// Container()
-// )
-// )).toList()
-// ),

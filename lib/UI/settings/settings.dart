@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:math/UI/account/login.dart';
-import 'package:math/UI/admin/adminInit.dart';
+import 'package:math/UI/admin/admin_init.dart';
 import 'package:math/UI/learning/learning.dart';
 import 'package:math/UI/learning/level_choice.dart';
 import 'dart:developer' as developer;

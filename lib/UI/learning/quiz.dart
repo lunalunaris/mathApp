@@ -270,11 +270,11 @@ class _Quiz extends State<Quiz> {
             context,
             MaterialPageRoute(
                 builder: (context) => QuizResults(
-                  topic: topic, percent: percent
+                    topic: topic, percent: percent
                 )));
       }
     },
-        child: Text("Next"));
+        child: const Text("Next"));
   }
 
 
