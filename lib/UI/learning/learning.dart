@@ -1,14 +1,10 @@
-import 'dart:io';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:math/Database/FireStoreHandler.dart';
 import 'package:math/Model/SectionModel.dart';
-import 'package:math/UI/learning/quiz.dart';
 import 'package:math/UI/learning/quiz_section.dart';
 import 'package:math/UI/learning/topic_choice.dart';
+import 'package:math/generated/l10n.dart';
 import 'dart:developer' as developer;
 import '../settings/settings.dart';
 
@@ -27,19 +23,26 @@ class _Learning extends State<Learning> {
 
   late String level;
   late String lang;
-  // late FirestoreHandler fs = FirestoreHandler();
   late List<SectionModel> sections = [
-    SectionModel(id: "temo", name: "Loading...", level: "0", lang: "en_US")
+    SectionModel(id: "temp", name: "Loading...", level: "0", lang: "en")
   ];
-  late List<String> completedSections=[];
+  late List<String> completedSections = [];
 
   @override
   void initState() {
     user = FirebaseAuth.instance.currentUser;
-    lang = Platform.localeName;
+    // lang = Platform.localeName;
     level = "0";
-    initLevel();
+    // initLevel();
     super.initState();
+  }
+
+  @override
+  void didChangeDependencies() {
+    lang = Localizations.localeOf(context).languageCode.toString();
+    initLevel();
+    setState(() {});
+    super.didChangeDependencies();
   }
 
   initLevel() async {
@@ -62,12 +65,16 @@ class _Learning extends State<Learning> {
               level: docSnapshot.data()["level"],
               lang: docSnapshot.data()["lang"]));
         }
-        await db.collection("SectionQuizCompleted").where("user", isEqualTo: user?.uid).get().then((value) async{
-          for(var item in value.docs){
+        await db
+            .collection("SectionQuizCompleted")
+            .where("user", isEqualTo: user?.uid)
+            .get()
+            .then((value) async {
+          for (var item in value.docs) {
             completedSections.add(item["section"]);
           }
         });
-      }, onError: (e) => print("Error fetching sections by level"));
+      }, onError: (e) => print("Error fetching completed quiz sections"));
     }, onError: (e) => print("Error fetching sections by level"));
     setState(() {});
   }
@@ -77,7 +84,7 @@ class _Learning extends State<Learning> {
     return Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-          title: const Text("Learning"),
+          title: Text(S.of(context).learning),
         ),
         body: Container(
           decoration: BoxDecoration(
@@ -103,7 +110,7 @@ class _Learning extends State<Learning> {
                     padding: const EdgeInsets.all(10),
                     alignment: Alignment.center,
                     child: Text(
-                      "Choose chapter",
+                      S.of(context).chooseChapter,
                       style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -125,9 +132,7 @@ class _Learning extends State<Learning> {
                                 context,
                                 MaterialPageRoute(
                                     builder: (context) =>
-                                        TopicChoice(section: i)
-                                )
-                            );
+                                        TopicChoice(section: i)));
                           },
                           style: ButtonStyle(
                               backgroundColor: MaterialStateProperty.all(
@@ -148,11 +153,18 @@ class _Learning extends State<Learning> {
                                 color: Colors.black54),
                           )),
                       trailing: IconButton(
-                          onPressed: () {
-                            Navigator.push(context,
-                                MaterialPageRoute(builder: (context) => QuizSection(section: i,)));
-                          },
-                          icon:  Icon(Icons.question_answer_rounded, color: completedSections.contains(i.id)?Colors.cyan:Colors.black45),
+                        onPressed: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => QuizSection(
+                                        section: i,
+                                      )));
+                        },
+                        icon: Icon(Icons.question_answer_rounded,
+                            color: completedSections.contains(i.id)
+                                ? Colors.cyan
+                                : Colors.black45),
                       ),
                     ),
                     const Divider(height: 0),
@@ -165,18 +177,18 @@ class _Learning extends State<Learning> {
             backgroundColor: Colors.teal.shade400,
             selectedItemColor: Colors.pink.withOpacity(0.8),
             unselectedItemColor: Colors.teal.shade900.withOpacity(0.8),
-            items: const <BottomNavigationBarItem>[
+            items: <BottomNavigationBarItem>[
               BottomNavigationBarItem(
-                icon: Icon(Icons.book),
-                label: "Learn",
+                icon: const Icon(Icons.book),
+                label: S.of(context).learn,
               ),
               BottomNavigationBarItem(
-                icon: Icon(Icons.games),
-                label: "Game",
+                icon: const Icon(Icons.games),
+                label: S.of(context).game,
               ),
               BottomNavigationBarItem(
-                icon: Icon(Icons.settings),
-                label: "Setup",
+                icon: const Icon(Icons.settings),
+                label: S.of(context).setup,
               ),
             ],
             onTap: (option) {
@@ -192,12 +204,13 @@ class _Learning extends State<Learning> {
                 //   break;
                 case 2:
                   Navigator.of(context).pop();
-                  Navigator.push(context,
-                      MaterialPageRoute(builder: (context) => UserSettings()));
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const UserSettings()));
                   break;
               }
-            })
-    );
+            }));
   }
 }
 

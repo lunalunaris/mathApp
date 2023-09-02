@@ -2,16 +2,13 @@ import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:math/Model/PracticeModel.dart';
+import 'package:math/generated/l10n.dart';
 import 'package:math_keyboard/math_keyboard.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:path/path.dart';
-
 import '../../Model/QuizModel.dart';
-import '../../Model/TheoryModel.dart';
 
 class UploadQuiz extends StatefulWidget {
   late String type;
@@ -28,33 +25,28 @@ class _UploadQuiz extends State<UploadQuiz> {
   late User? user;
   late String container;
   late String type;
-
   FirebaseFirestore db = FirebaseFirestore.instance;
   firebase_storage.FirebaseStorage storage =
       firebase_storage.FirebaseStorage.instance;
-
   final responseController = TextEditingController();
-
-
   String equationInput = "";
-
   String resultInput = "";
   TextEditingController quizContentController = TextEditingController();
   MathFieldEditingController quizEquationController =
-  MathFieldEditingController();
+      MathFieldEditingController();
   MathFieldEditingController quizResultController =
-  MathFieldEditingController();
-  MathFieldEditingController ASolutionsController =
-  MathFieldEditingController();
+      MathFieldEditingController();
+  MathFieldEditingController aSolutionsController =
+      MathFieldEditingController();
   String aInput = "";
-  MathFieldEditingController BSolutionsController =
-  MathFieldEditingController();
+  MathFieldEditingController bSolutionsController =
+      MathFieldEditingController();
   String bInput = "";
-  MathFieldEditingController CSolutionsController =
-  MathFieldEditingController();
+  MathFieldEditingController cSolutionsController =
+      MathFieldEditingController();
   String cInput = "";
-  MathFieldEditingController DSolutionsController =
-  MathFieldEditingController();
+  MathFieldEditingController dSolutionsController =
+      MathFieldEditingController();
   String dInput = "";
 
   Color cameraColorImg = Colors.black45;
@@ -62,7 +54,6 @@ class _UploadQuiz extends State<UploadQuiz> {
   File? image;
 
   final ImagePicker imagePicker = ImagePicker();
-
 
   @override
   void initState() {
@@ -78,20 +69,20 @@ class _UploadQuiz extends State<UploadQuiz> {
   }
 
   submitQuiz(BuildContext context) async {
-
     try {
-      var downloadUrl ="";
+      var downloadUrl = "";
 
-      if(image!=null){
+      if (image != null) {
         final name = basename(image!.path);
-        final dest= 'practice/$name';
+        final dest = 'practice/$name';
         var snapshotTask = await storage.ref(dest).putFile(image!);
-        downloadUrl= await snapshotTask.ref.getDownloadURL();
+        downloadUrl = await snapshotTask.ref.getDownloadURL();
       }
-      var solution= "$aInput,$bInput,$cInput,$dInput";
+      var solution = "$aInput,$bInput,$cInput,$dInput";
       QuizModel quiz;
-      if(type=="quiz"){
-         quiz= QuizModel(id: "",
+      if (type == "quiz") {
+        quiz = QuizModel(
+            id: "",
             topicId: container,
             section: "",
             content: quizContentController.text,
@@ -99,9 +90,9 @@ class _UploadQuiz extends State<UploadQuiz> {
             img: downloadUrl,
             result: resultInput,
             solutions: solution);
-      }
-      else{
-         quiz= QuizModel(id: "",
+      } else {
+        quiz = QuizModel(
+            id: "",
             topicId: "",
             section: container,
             content: quizContentController.text,
@@ -110,47 +101,46 @@ class _UploadQuiz extends State<UploadQuiz> {
             result: resultInput,
             solutions: solution);
       }
-      addQuiz(quiz);
-
-
+      try {
+        addQuiz(quiz);
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(S.of(context).quizSubmittedSuccessfully)));
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(S.of(context).submissionFailed)));
+      }
     } catch (e) {
       print(e.toString());
     }
-
-    //submit photo and await for it before adding practice
-
   }
 
   Future getImgFromGallery(BuildContext context) async {
-    final files = await imagePicker.pickImage(source: ImageSource.gallery,
-        maxWidth: 500,
-        maxHeight: 500
-    );
-    XFile? filePick= files;
-    if(filePick!=null){
-      image=File(filePick.path);
-      setState(() {
-      });
-    }
-    else {
-      ScaffoldMessenger.of(context ).showSnackBar(
-          const SnackBar(content: Text('Nothing is selected')));
+    final files = await imagePicker.pickImage(
+        source: ImageSource.gallery, maxWidth: 500, maxHeight: 500);
+    XFile? filePick = files;
+    if (filePick != null) {
+      image = File(filePick.path);
+      setState(() {});
+    } else {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(S.of(context).nothingIsSelected)));
     }
   }
-  Future getImgFromCamera(BuildContext context) async{
-    final files = await imagePicker.pickImage(source: ImageSource.camera,
-        maxWidth: 500,
-        maxHeight: 500
-    );
-    XFile? filePick= files;
-    if(filePick!=null){
-      image=File(filePick.path);
-      setState(() {
-      });
-    }
-    else {
-      ScaffoldMessenger.of(context ).showSnackBar(
-          const SnackBar(content: Text('Nothing is selected')));
+
+  Future getImgFromCamera(BuildContext context) async {
+    final files = await imagePicker.pickImage(
+        source: ImageSource.camera, maxWidth: 500, maxHeight: 500);
+    XFile? filePick = files;
+    if (filePick != null) {
+      image = File(filePick.path);
+      setState(() {});
+    } else {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(S.of(context).nothingIsSelected)));
     }
   }
 
@@ -165,13 +155,13 @@ class _UploadQuiz extends State<UploadQuiz> {
       body: Container(
           decoration: BoxDecoration(
               gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.pink.shade500.withOpacity(0.8),
-                  Colors.teal.shade100.withOpacity(0.8),
-                ],
-              )),
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.pink.shade500.withOpacity(0.8),
+              Colors.teal.shade100.withOpacity(0.8),
+            ],
+          )),
           child: Container(
               padding: const EdgeInsets.all(10),
               margin: const EdgeInsets.all(30),
@@ -180,13 +170,9 @@ class _UploadQuiz extends State<UploadQuiz> {
                 borderRadius: BorderRadius.circular(10.0),
                 color: Colors.white.withOpacity(0.8),
               ),
-              child: Column(children: [
-                    buildQuizView(context)
-              ]))),
+              child: Column(children: [buildQuizView(context)]))),
     );
   }
-
-
 
   SingleChildScrollView buildQuizView(BuildContext context) {
     return SingleChildScrollView(
@@ -227,7 +213,7 @@ class _UploadQuiz extends State<UploadQuiz> {
                         vertical: 10, horizontal: 20),
                     border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10.0)),
-                    hintText: "Quiz task content",
+                    hintText: S.of(context).quizTaskContent,
                   )),
             ),
             Padding(
@@ -238,13 +224,15 @@ class _UploadQuiz extends State<UploadQuiz> {
                 variables: const ['x', 'y', 'z'],
                 decoration: InputDecoration(
                   contentPadding:
-                  const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                      const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
                   border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10.0)),
-                  hintText: "Equations",
+                  hintText: S.of(context).equations,
                 ),
-                onChanged: (String value) {  equationInput = value;
-                setState(() {});},
+                onChanged: (String value) {
+                  equationInput = value;
+                  setState(() {});
+                },
                 onSubmitted: (String value) {
                   equationInput = value;
                   setState(() {});
@@ -260,13 +248,15 @@ class _UploadQuiz extends State<UploadQuiz> {
                 variables: const ['x', 'y', 'z'],
                 decoration: InputDecoration(
                   contentPadding:
-                  const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                      const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
                   border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10.0)),
-                  hintText: "Correct result",
+                  hintText: S.of(context).correctResult,
                 ),
-                onChanged: (String value) { resultInput = value;
-                setState(() {});},
+                onChanged: (String value) {
+                  resultInput = value;
+                  setState(() {});
+                },
                 onSubmitted: (String value) {
                   resultInput = value;
                   setState(() {});
@@ -280,7 +270,7 @@ class _UploadQuiz extends State<UploadQuiz> {
                 SizedBox(
                   width: MediaQuery.of(context).size.width / 3,
                   child: MathField(
-                    controller: ASolutionsController,
+                    controller: aSolutionsController,
                     keyboardType: MathKeyboardType.expression,
                     variables: const ['x', 'y', 'z'],
                     decoration: InputDecoration(
@@ -290,8 +280,10 @@ class _UploadQuiz extends State<UploadQuiz> {
                           borderRadius: BorderRadius.circular(10.0)),
                       hintText: "A",
                     ),
-                    onChanged: (String value) { aInput = value;
-                    setState(() {});},
+                    onChanged: (String value) {
+                      aInput = value;
+                      setState(() {});
+                    },
                     onSubmitted: (String value) {
                       aInput = value;
                       setState(() {});
@@ -302,7 +294,7 @@ class _UploadQuiz extends State<UploadQuiz> {
                 SizedBox(
                   width: MediaQuery.of(context).size.width / 3,
                   child: MathField(
-                    controller: BSolutionsController,
+                    controller: bSolutionsController,
                     keyboardType: MathKeyboardType.expression,
                     variables: const ['x', 'y', 'z'],
                     decoration: InputDecoration(
@@ -312,8 +304,10 @@ class _UploadQuiz extends State<UploadQuiz> {
                           borderRadius: BorderRadius.circular(10.0)),
                       hintText: "B",
                     ),
-                    onChanged: (String value) { bInput = value;
-                    setState(() {});},
+                    onChanged: (String value) {
+                      bInput = value;
+                      setState(() {});
+                    },
                     onSubmitted: (String value) {
                       bInput = value;
                       setState(() {});
@@ -329,7 +323,7 @@ class _UploadQuiz extends State<UploadQuiz> {
                 SizedBox(
                   width: MediaQuery.of(context).size.width / 3,
                   child: MathField(
-                    controller: CSolutionsController,
+                    controller: cSolutionsController,
                     keyboardType: MathKeyboardType.expression,
                     variables: const ['x', 'y', 'z'],
                     decoration: InputDecoration(
@@ -339,8 +333,10 @@ class _UploadQuiz extends State<UploadQuiz> {
                           borderRadius: BorderRadius.circular(10.0)),
                       hintText: "C",
                     ),
-                    onChanged: (String value) { cInput = value;
-                    setState(() {});},
+                    onChanged: (String value) {
+                      cInput = value;
+                      setState(() {});
+                    },
                     onSubmitted: (String value) {
                       cInput = value;
                       setState(() {});
@@ -351,7 +347,7 @@ class _UploadQuiz extends State<UploadQuiz> {
                 SizedBox(
                   width: MediaQuery.of(context).size.width / 3,
                   child: MathField(
-                    controller: DSolutionsController,
+                    controller: dSolutionsController,
                     keyboardType: MathKeyboardType.expression,
                     variables: const ['x', 'y', 'z'],
                     decoration: InputDecoration(
@@ -361,8 +357,10 @@ class _UploadQuiz extends State<UploadQuiz> {
                           borderRadius: BorderRadius.circular(10.0)),
                       hintText: "D",
                     ),
-                    onChanged: (String value) { dInput = value;
-                    setState(() {});},
+                    onChanged: (String value) {
+                      dInput = value;
+                      setState(() {});
+                    },
                     onSubmitted: (String value) {
                       dInput = value;
                       setState(() {});
@@ -375,22 +373,19 @@ class _UploadQuiz extends State<UploadQuiz> {
             ElevatedButton(
                 onPressed: () {
                   submitQuiz(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Quiz uploaded')));
                   Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) =>
-                              UploadQuiz( container: container, type: type,)));
+                          builder: (context) => UploadQuiz(
+                                container: container,
+                                type: type,
+                              )));
                   Navigator.pop(context);
                 },
-                child: const Text("Submit"))
+                child: Text(S.of(context).submit))
           ],
         ),
       ),
     );
   }
-
-
 }
-

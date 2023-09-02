@@ -49,6 +49,9 @@ dependencies:
 #  image_picker: ^0.8.4
   cached_network_image: ^3.2.3
   image_picker: ^1.0.4
+  flutter_localizations:
+    sdk: flutter
+  intl: ^0.18.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -70,6 +73,7 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+  generate: true
   assets:
     - assets/theory.png
 
@@ -101,3 +105,5 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages
+flutter_intl:
+  enabled: true

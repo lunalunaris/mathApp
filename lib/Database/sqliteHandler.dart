@@ -61,14 +61,14 @@ class SqliteHandler {
     final Database db = await initializeDB();
     final List<Map<String, Object?>> queryResult =
         await db.query("sections", where: "level = ?", whereArgs: [level]);
-    return queryResult.map((e) => SectionModel.fromMap(e)).toList();
+    return queryResult.map((e) => SectionModel.fromDbMap(e)).toList();
   }
 
   Future<List<TopicModel>> getTopicsBySection(String sectionId) async {
     final Database db = await initializeDB();
     final List<Map<String, Object?>> queryResult = await db
         .query("topics", where: "section = ?", whereArgs: [sectionId]);
-    return queryResult.map((e) => TopicModel.fromMap(e)).toList();
+    return queryResult.map((e) => TopicModel.fromDbMap(e)).toList();
   }
 
 
@@ -151,6 +151,24 @@ class SqliteHandler {
     return await db.delete(table);
   }
 
+
+  //+++++++OTHER++++++++++
+
+Future<bool> isPracticeSaved(String id) async {
+  final Database db = await initializeDB();
+  var response = await db.query("Practice", where: "id = ?", whereArgs: [id]);
+  return response.isNotEmpty;
+}
+  Future<bool> isQuizSaved(String topicId) async {
+    final Database db = await initializeDB();
+    var response = await db.query("Quiz", where: "topicId = ?", whereArgs: [topicId]);
+    return response.isNotEmpty;
+  }
+  Future<bool> isTheorySaved(String topicId) async {
+    final Database db = await initializeDB();
+    var response = await db.query("Theory", where: "topicId = ?", whereArgs: [topicId]);
+    return response.isNotEmpty;
+  }
 
 
   // Future<List> getCompletedAll() async {

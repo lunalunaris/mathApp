@@ -2,13 +2,9 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:math/Model/TopicModel.dart';
-import 'package:math/UI/learning/learning.dart';
-import 'dart:developer' as developer;
 import '../../Model/TheoryModel.dart';
-import '../settings/settings.dart';
 
 class Theory extends StatefulWidget {
   late TopicModel topic;
@@ -30,7 +26,6 @@ List<TheoryModel> theory = [];
     user = FirebaseAuth.instance.currentUser;
     topic = widget.topic;
     // topic=TopicModel(id: "di5oYBaHX4PjAmIBnu4K", name: "Temp", sectionId: "temp", lang: "en_UK");
-
     initTheoryList();
     super.initState();
   }
@@ -41,7 +36,7 @@ List<TheoryModel> theory = [];
         .where("topicId", isEqualTo: topic.id)
         .get()
         .then((querySnapshot) {
-      print("topics by section completed");
+      print("theory by topic completed");
       theory = [];
       for (var docSnapshot in querySnapshot.docs) {
         print(docSnapshot.data());
@@ -51,15 +46,12 @@ List<TheoryModel> theory = [];
             topicId: docSnapshot.data()["topicId"]));
         print(theory.length);
       }
-    }, onError: (e) => print("Error fetching topics by section"));
+    }, onError: (e) => print("Error fetching theory by topic"));
     setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    // TODO: implement build
-    //switch this for photos from db
-
     final PageController controller = PageController();
     return Scaffold(
       appBar: AppBar(
@@ -67,8 +59,6 @@ List<TheoryModel> theory = [];
       ),
       body:
      PageView(
-      /// [PageView.scrollDirection] defaults to [Axis.horizontal].
-      /// Use [Axis.vertical] to scroll vertically.
       controller: controller,
       children:  <Widget>[
         if(theory.isNotEmpty)

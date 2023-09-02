@@ -8,6 +8,7 @@ import 'package:math/UI/learning/theory.dart';
 import 'dart:developer' as developer;
 
 import '../../Model/TopicModel.dart';
+import '../../generated/l10n.dart';
 import '../settings/settings.dart';
 
 class Topic extends StatefulWidget {
@@ -35,7 +36,7 @@ class _Topic extends State<Topic> {
     return Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-          title: const Text("Learning"),
+          title:  Text(S.of(context).learning),
         ),
         body: Container(
             decoration: BoxDecoration(
@@ -89,9 +90,9 @@ class _Topic extends State<Topic> {
                         borderRadius:
                         const BorderRadius.all(Radius.circular(10)),
                       ),
-                      child: const Text(
-                        "Theory",
-                        style: TextStyle(
+                      child:  Text(
+                        S.of(context).theory,
+                        style: const TextStyle(
                             fontSize: 25,
                             fontWeight: FontWeight.bold,
                             color: Colors.white),
@@ -125,9 +126,9 @@ class _Topic extends State<Topic> {
                               borderRadius:
                               const BorderRadius.all(Radius.circular(10)),
                             ),
-                            child: const Text(
-                              "Practice",
-                              style: TextStyle(
+                            child:  Text(
+                              S.of(context).practice,
+                              style: const TextStyle(
                                   fontSize: 25,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.white),
@@ -175,19 +176,19 @@ class _Topic extends State<Topic> {
             )),
         bottomNavigationBar: BottomNavigationBar(
             backgroundColor: Colors.teal,
-            items: const <BottomNavigationBarItem>[
+            items:  <BottomNavigationBarItem>[
               BottomNavigationBarItem(
-                icon: Icon(Icons.book),
-                label: "Learn",
+                icon: const Icon(Icons.book),
+                label: S.of(context).learn,
               ),
               BottomNavigationBarItem(
                 backgroundColor: Colors.lime,
-                icon: Icon(Icons.games),
-                label: "Game",
+                icon: const Icon(Icons.games),
+                label: S.of(context).game,
               ),
               BottomNavigationBarItem(
-                icon: Icon(Icons.settings),
-                label: "Setup",
+                icon: const Icon(Icons.settings),
+                label: S.of(context).setup,
               ),
             ],
             onTap: (option) {
@@ -213,7 +214,7 @@ class _Topic extends State<Topic> {
                   Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => UserSettings()));
+                          builder: (context) => const UserSettings()));
                   break;
               }
             },

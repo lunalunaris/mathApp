@@ -1,9 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:math/temp/User.dart';
 import 'package:math/UI/account/login.dart';
-import 'package:math/UI/learning/level_choice.dart';
+
+import '../../generated/l10n.dart';
 
 class Register extends StatelessWidget {
   const Register({Key? key}) : super(key: key);
@@ -13,9 +13,9 @@ class Register extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color(0xFFA52444),
-        title: const Text(
-          "Register Page",
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        title:  Text(
+          S.of(context).registerPage,
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
       ),
       backgroundColor: Colors.white,
@@ -31,7 +31,7 @@ class Register extends StatelessWidget {
                     Colors.teal.shade100.withOpacity(0.8),
                   ],
                 )),
-            child: UserForm(),),
+            child: const UserForm(),),
 
       ),
     );
@@ -49,11 +49,19 @@ class _UserForm extends State<UserForm> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final passwordRepeatController = TextEditingController();
-
+  Color emailColor= Colors.pinkAccent;
   registerUser() async {
     var email = emailController.text;
     var password = passwordController.text;
     var passwordRepeat = passwordRepeatController.text;
+    if (email==""){
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(S.of(context).emailFieldCannotBeEmpty)));
+    }
+    if(password =="" || passwordRepeat==""){
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(S.of(context).passewordFieldCannotBeEmpty)));
+    }
     //Register the user
     //notifications if email is already used, etc
     if (password == passwordRepeat) {
@@ -62,15 +70,25 @@ class _UserForm extends State<UserForm> {
             .createUserWithEmailAndPassword(email: email, password: password);
       } on FirebaseAuthException catch (e) {
         if (e.code == 'weak-password') {
-          print('The password provided is too weak.');
+          ScaffoldMessenger.of(context).showSnackBar(
+               SnackBar(content: Text(S.of(context).thePasswordIsTooWeak)));
         } else if (e.code == 'email-already-in-use') {
-          print('The account already exists for that email.');
+          ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(S.of(context).anAccountAlreadyExistsForThatEmail)));
+        }
+        else if(e.code == 'invalid-email'){
+          ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(S.of(context).theEmailIsInvalid)));
         }
       } catch (e) {
         print(e);
       }
       if (!mounted) return;
-      Navigator.push(context, MaterialPageRoute(builder: (context) => Login()));
+      Navigator.push(context, MaterialPageRoute(builder: (context) => const Login()));
+    }
+    else {
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(S.of(context).passwordsDontMatch)));
     }
 
     // displayDialog(context, "Incorrect Input", "Invalid credentials");
@@ -91,7 +109,7 @@ class _UserForm extends State<UserForm> {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-        padding: EdgeInsets.all(20),
+        padding: const EdgeInsets.all(20),
         child: Container(
           padding: const EdgeInsets.all(5),
           margin: const EdgeInsets.all(30),
@@ -105,16 +123,16 @@ class _UserForm extends State<UserForm> {
               const SizedBox(
                 height: 60,
               ),
-              const Text("Log in",
-                  style: TextStyle(
+               Text(S.of(context).logIn,
+                  style: const TextStyle(
                       fontSize: 30,
                       color: Colors.pink,
                       fontWeight: FontWeight.bold)),
               const SizedBox(
                 height: 20,
               ),
-              const Text("Welcome back",
-                  style: TextStyle(fontSize: 20, color: Colors.teal)),
+               Text(S.of(context).welcomeBack,
+                  style: const TextStyle(fontSize: 20, color: Colors.teal)),
               const SizedBox(
                 height: 30,
               ),
@@ -122,9 +140,14 @@ class _UserForm extends State<UserForm> {
                 width: 300,
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
-                  child: TextField(
+                  child: TextFormField(
                       controller: emailController,
+                      autovalidateMode: AutovalidateMode.onUserInteraction,
                       decoration: InputDecoration(
+                        errorText: S.of(context).emailFieldCannotBeEmpty,
+                        errorBorder:  const OutlineInputBorder(
+                          borderSide:  BorderSide(color: Colors.red, width: 0.0),
+                        ),
                         contentPadding: const EdgeInsets.symmetric(
                             vertical: 10, horizontal: 20),
                         border: OutlineInputBorder(
@@ -141,17 +164,22 @@ class _UserForm extends State<UserForm> {
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: SingleChildScrollView(
-                    child: TextField(
+                    child: TextFormField(
                         obscureText: true,
+                        autovalidateMode: AutovalidateMode.onUserInteraction,
                         enableSuggestions: false,
                         autocorrect: false,
                         controller: passwordController,
                         decoration: InputDecoration(
+                            errorText: S.of(context).passwordFieldCannotBeEmpty,
+                            errorBorder:  const OutlineInputBorder(
+                              borderSide:  BorderSide(color: Colors.red, width: 0.0),
+                            ),
                             contentPadding: const EdgeInsets.symmetric(
                                 vertical: 10, horizontal: 20),
                             border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10.0)),
-                            hintText: "password")),
+                            hintText: S.of(context).password)),
                   ),
                 ),
               ),
@@ -164,30 +192,35 @@ class _UserForm extends State<UserForm> {
                   padding: const EdgeInsets.all(0.8),
                   child: TextFormField(
                       obscureText: true,
+                      autovalidateMode: AutovalidateMode.onUserInteraction,
                       enableSuggestions: false,
                       autocorrect: false,
                       controller: passwordRepeatController,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please enter some text';
+                          return S.of(context).pleaseEnterSomeText;
                         } else if (value != passwordController.text) {
-                          return "passwords don't match";
+                          return S.of(context).passwordsDontMatch;
                         }
                         return null;
                       },
                       decoration: InputDecoration(
+                          errorText: S.of(context).passwordFieldCannotBeEmpty,
+                          errorBorder:  const OutlineInputBorder(
+                            borderSide:  BorderSide(color: Colors.red, width: 0.0),
+                          ),
                           contentPadding: const EdgeInsets.symmetric(
                               vertical: 10, horizontal: 20),
                           border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10.0)),
-                          hintText: "password")),
+                          hintText: S.of(context).password)),
                 ),
               ),
               const SizedBox(
                 height: 20,
               ),
               Container(
-                margin: EdgeInsets.all(20),
+                margin: const EdgeInsets.all(20),
                 child: ElevatedButton(
                     onPressed: () {
                       registerUser();
@@ -199,9 +232,9 @@ class _UserForm extends State<UserForm> {
                             RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ))),
-                    child: const Text(
-                      "Register",
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    child:  Text(
+                      S.of(context).register,
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                     )),
               )
             ],

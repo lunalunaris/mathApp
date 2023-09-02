@@ -1,10 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:math/Model/SectionModel.dart';
 import 'package:math/UI/admin/quiz_upload.dart';
 import 'package:math/UI/admin/topic_choice_admin.dart';
+
+import '../../generated/l10n.dart';
 
 class SectionChoice extends StatefulWidget {
   late String? level;
@@ -30,8 +31,7 @@ class _SectionChoice extends State<SectionChoice> {
   late String type;
   late SectionModel section;
 
-  // late FirestoreHandler fs = FirestoreHandler();
-  TextEditingController controller = TextEditingController();
+  TextEditingController topicController = TextEditingController();
   late List<SectionModel> sections = [
     SectionModel(id: "temp", name: "Loading...", level: "0", lang: "en_US")
   ];
@@ -48,17 +48,21 @@ class _SectionChoice extends State<SectionChoice> {
   }
 
   Future<void> addTopic() async {
-    db
-        .collection("Topic")
-        .add({"lang": lang, "name": controller.text, "section": section.id});
+    try{
+      db.collection("Topic").add(
+          {"lang": lang, "name": topicController.text, "section": section.id});
+      ScaffoldMessenger.of(context).showSnackBar(
+           SnackBar(content: Text(S.of(context).topicSubmittedSuccessfully)));
+    }
+    catch (e){
+      ScaffoldMessenger.of(context).showSnackBar(
+           SnackBar(content: Text(S.of(context).submissionFailed)));
+    }
+    topicController.text = "";
   }
 
   submitToDB() {
     addTopic();
-    //popup
-    setState(() {
-      flag = false;
-    });
   }
 
   initLevel() async {
@@ -68,7 +72,7 @@ class _SectionChoice extends State<SectionChoice> {
         .where("lang", isEqualTo: lang)
         .get()
         .then((querySnapshot) async {
-      print("sections by level completed");
+      print("topics by level completed");
       sections = [];
       for (var docSnapshot in querySnapshot.docs) {
         sections.add(SectionModel(
@@ -81,16 +85,17 @@ class _SectionChoice extends State<SectionChoice> {
     setState(() {});
   }
 
-  next() {
-    if (type == "topic") {
-      flag = false;
-      setState(() {});
-    } else if (type == "section quiz") {
+  next(BuildContext context) {
+    if (type == "1") {
+      showTopicDialog(context);
+    } else if (type == "5") {
       Navigator.push(
           context,
           MaterialPageRoute(
-              builder: (context) =>
-                  UploadQuiz(type: type, container: section.id,)));
+              builder: (context) => UploadQuiz(
+                    type: type,
+                    container: section.id,
+                  )));
       //navigate to final view - pass type, section and lang
     } else {
       Navigator.push(
@@ -109,7 +114,7 @@ class _SectionChoice extends State<SectionChoice> {
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: const Text("Section Choice"),
+        title: Text(S.of(context).sectionChoice),
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -122,42 +127,15 @@ class _SectionChoice extends State<SectionChoice> {
           ],
         )),
         child: Container(
-          padding: const EdgeInsets.all(5),
-          margin: const EdgeInsets.all(30),
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10.0),
-            color: Colors.white.withOpacity(0.8),
-          ),
-          child: flag ? buildListView(context) : buildTopicInput(context),
-        ),
+            padding: const EdgeInsets.all(5),
+            margin: const EdgeInsets.all(30),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10.0),
+              color: Colors.white.withOpacity(0.8),
+            ),
+            child: buildListView(context)),
       ),
-    );
-  }
-
-  buildTopicInput(BuildContext context) {
-    return Column(
-      children: [
-        const Text(
-          "Submit name for your topic",
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-        ),
-        TextFormField(
-            enableSuggestions: false,
-            autocorrect: false,
-            controller: controller,
-            decoration: InputDecoration(
-              contentPadding:
-                  const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-              border:
-                  OutlineInputBorder(borderRadius: BorderRadius.circular(10.0)),
-            )),
-        ElevatedButton(
-            onPressed: () {
-              submitToDB();
-            },
-            child: const Text("Submit"))
-      ],
     );
   }
 
@@ -168,7 +146,7 @@ class _SectionChoice extends State<SectionChoice> {
             padding: const EdgeInsets.all(10),
             alignment: Alignment.center,
             child: Text(
-              "Choose chapter",
+              S.of(context).chooseChapter,
               style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -188,7 +166,7 @@ class _SectionChoice extends State<SectionChoice> {
                   onPressed: () {
                     section = i;
                     setState(() {});
-                    next();
+                    next(context);
                   },
                   style: ButtonStyle(
                       backgroundColor: MaterialStateProperty.all(
@@ -211,5 +189,52 @@ class _SectionChoice extends State<SectionChoice> {
           ])
       ],
     );
+  }
+
+  showTopicDialog(BuildContext context) {
+    showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(
+                Radius.circular(
+                  20.0,
+                ),
+              ),
+            ),
+            contentPadding: const EdgeInsets.only(
+              top: 10.0,
+            ),
+            content: SizedBox(
+              height: 140,
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: TextField(
+                      obscureText: false,
+                      enableSuggestions: false,
+                      autocorrect: false,
+                      controller: topicController,
+                      decoration: InputDecoration(
+                          contentPadding: const EdgeInsets.symmetric(
+                              vertical: 10, horizontal: 20),
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10.0)),
+                          hintText: S.of(context).topicName),
+                    ),
+                  ),
+                  ElevatedButton(
+                      onPressed: () {
+                        addTopic();
+                        Navigator.of(context).pop();
+                      },
+                      child: Text(S.of(context).submit))
+                ],
+              ),
+            ),
+          );
+        });
   }
 }

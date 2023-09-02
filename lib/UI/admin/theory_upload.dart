@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
@@ -10,6 +9,7 @@ import 'package:math/UI/admin/admin_init.dart';
 import 'package:path/path.dart';
 
 import '../../Model/TheoryModel.dart';
+import '../../generated/l10n.dart';
 
 class UploadTheory extends StatefulWidget {
   late String container;
@@ -53,7 +53,7 @@ class _UploadTheory extends State<UploadTheory> {
       resizeToAvoidBottomInset: false,
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: Text("Theory"),
+        title:  Text(S.of(context).theory),
       ),
       body: Container(
           decoration: BoxDecoration(
@@ -98,11 +98,12 @@ class _UploadTheory extends State<UploadTheory> {
       // submitTheory();
     }
     else {
-      ScaffoldMessenger.of(context ).showSnackBar(
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Nothing is selected')));
     }
   }
-  submitTheory() async {
+  submitTheory(BuildContext context) async {
     for(var i in selectedTheoryImg){
       final name = basename(i.path);
       final dest = 'theory/$name';
@@ -112,8 +113,13 @@ class _UploadTheory extends State<UploadTheory> {
         TheoryModel theory =
         TheoryModel(id: "none", topicId: container, img: downloadUrl);
         addTheory(theory);
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+             SnackBar(content: Text(S.of(context).theorySubmittedSuccessfully)));
       } catch (e) {
         print(e.toString());
+        ScaffoldMessenger.of(context).showSnackBar(
+             SnackBar(content: Text(S.of(context).submissionFailed)));
       }
     }
   }
@@ -129,8 +135,9 @@ class _UploadTheory extends State<UploadTheory> {
       });
     }
     else {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Nothing is selected')));
+           SnackBar(content: Text(S.of(context).nothingIsSelected)));
     }
   }
   Expanded buildTheoryView(BuildContext context) {
@@ -139,13 +146,19 @@ class _UploadTheory extends State<UploadTheory> {
         child: Column(
         children: [
           Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text(S.of(context).uploadTheoryImages, style: const TextStyle(
+              fontSize: 20,fontWeight: FontWeight.bold
+            ),),
+          ),
+          Padding(
             padding: const EdgeInsets.all(15.0),
             child: FloatingActionButton.extended(
               onPressed: () {
                 getTheoryPhotos(context);
                 setState(() {});
               },
-              label: const Text("Upload theory images"),
+              label:  Text(S.of(context).fromGallery),
               backgroundColor: Colors.pink.shade800,
               icon: const Icon(Icons.add_a_photo_rounded),
             ),
@@ -157,7 +170,7 @@ class _UploadTheory extends State<UploadTheory> {
                 getTheoryFromCamera(context);
                 setState(() {});
               },
-              label: const Text("Upload from camera"),
+              label:  Text(S.of(context).fromCamera),
               backgroundColor: Colors.pink.shade800,
               icon: const Icon(Icons.add_a_photo_rounded),
             ),
@@ -165,9 +178,9 @@ class _UploadTheory extends State<UploadTheory> {
           ElevatedButton(
               onPressed: () {
                 if(selectedTheoryImg.isNotEmpty){
-                  submitTheory();
+                  submitTheory(context);
                   ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Files submitted')));
+                       SnackBar(content: Text(S.of(context).filesSubmitted)));
                   Navigator.pop(context);
                   Navigator.push(
                       context,
@@ -177,10 +190,10 @@ class _UploadTheory extends State<UploadTheory> {
                 }
                 else {
                   ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Nothing is selected')));
+                       SnackBar(content: Text(S.of(context).nothingIsSelected)));
                 }
               },
-              child: const Text("Submit")),
+              child:  Text(S.of(context).submit)),
           Column(
             children: [
               for (var i in selectedTheoryImg)

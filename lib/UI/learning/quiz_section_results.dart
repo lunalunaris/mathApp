@@ -5,10 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:math/Model/SectionModel.dart';
 import 'package:math/UI/learning/quiz.dart';
 import 'package:math/UI/learning/quiz_section.dart';
+import 'package:math/generated/l10n.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
-
-
-
 
 class QuizSectionResults extends StatefulWidget {
   late SectionModel section;
@@ -54,13 +52,13 @@ class _QuizSectionResults extends State<QuizSectionResults> {
         body: Container(
             decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.pink.shade500.withOpacity(0.8),
-                    Colors.teal.shade100.withOpacity(0.8),
-                  ],
-                )),
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.pink.shade500.withOpacity(0.8),
+                Colors.teal.shade100.withOpacity(0.8),
+              ],
+            )),
             child: Container(
                 padding: const EdgeInsets.all(10),
                 margin: const EdgeInsets.all(30),
@@ -93,7 +91,7 @@ class _QuizSectionResults extends State<QuizSectionResults> {
                     ),
                     Container(
                         margin: const EdgeInsets.all(15),
-                        child: const Text("Questions correct")),
+                        child: Text(S.of(context).questionsCorrect)),
                     Container(
                         margin: const EdgeInsets.all(15),
                         child: ElevatedButton(
@@ -103,10 +101,10 @@ class _QuizSectionResults extends State<QuizSectionResults> {
                                   context,
                                   MaterialPageRoute(
                                       builder: (context) => QuizSection(
-                                        section: section,
-                                      )));
+                                            section: section,
+                                          )));
                             },
-                            child: const Text("Try again?"))),
+                            child: Text(S.of(context).tryAgain))),
                     Container(
                         margin: const EdgeInsets.all(15),
                         child: ElevatedButton(

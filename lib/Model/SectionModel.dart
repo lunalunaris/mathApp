@@ -18,8 +18,16 @@ class SectionModel {
         level = result["level"],
         lang = result["lang"];
 
+  SectionModel.fromDbMap(Map<String, dynamic> result)
+      : id = result["id"],
+        name = result["name"],
+        level = result["level"];
+
   Map<String, Object> toMap() {
     return {'id': id, 'name': name, 'level': level, 'lang': lang};
+  }
+  Map<String, Object> toDbMap(){
+    return {'id': id, 'name': name, 'level': level};
   }
 
   factory SectionModel.fromFirestore(

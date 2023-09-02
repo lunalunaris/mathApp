@@ -1,11 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:math/UI/learning/learning.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import '../../generated/l10n.dart';
+
 class LevelChoice extends StatefulWidget {
-  LevelChoice({
+  const LevelChoice({
     Key? key,
   }) : super(key: key);
 
@@ -15,15 +16,22 @@ class LevelChoice extends StatefulWidget {
 
 class _LevelChoiceState extends State<LevelChoice> {
   late User? user;
+  late Locale locale;
   FirebaseFirestore db = FirebaseFirestore.instance;
   var levelList = {
+    "Primary school 1-3": "0",
+    "Primary school 4-6": "1",
+    "Primary school  7-8": "2",
+    "High school basic level": "3",
+    "High school advanced level": "4"
+  };
+  var levelListPl = {
     "Szkoła podstawowa 1-3": "0",
     "Szkoła podstawowa 4-6": "1",
     "Szkoła podstawowa 7-8": "2",
     "Szkoła średnia poziom podstawowy": "3",
     "Skoła średnia poziom rozszerzony": "4"
   };
-
   selectLevel(String level) {
     print(user?.uid);
     addLevel(levelList[level]!);
@@ -40,13 +48,22 @@ class _LevelChoiceState extends State<LevelChoice> {
     user = FirebaseAuth.instance.currentUser;
     super.initState();
   }
+  @override
+  void didChangeDependencies() {
+    locale = Localizations.localeOf(context);
+    if (locale.languageCode.toString()=="pl") {
+      levelList = levelListPl;
+    }
+    setState(() {});
+    super.didChangeDependencies();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: const Text("Choose level"),
+        title:  Text(S.of(context).chooseLevel),
       ),
       body: Container(
           decoration: BoxDecoration(
@@ -69,8 +86,8 @@ class _LevelChoiceState extends State<LevelChoice> {
               ),
               child: ListView(
                 children: [
-                  Container(padding: EdgeInsets.all(10),alignment: Alignment.center,
-                      child: Text("Choose class", style:
+                  Container(padding: const EdgeInsets.all(10),alignment: Alignment.center,
+                      child: Text(S.of(context).chooseClass, style:
                       TextStyle(fontSize: 20,
                           fontWeight: FontWeight.bold,color: Colors.teal.withOpacity(0.7)),)),
                   const Divider(height: 0,indent: 40, endIndent: 40,color: Colors.teal,),

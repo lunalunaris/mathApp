@@ -1,12 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:math/UI/learning/quiz.dart';
+import 'package:math/generated/l10n.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 
 import '../../Model/TopicModel.dart';
-
 
 class QuizResults extends StatefulWidget {
   late TopicModel topic;
@@ -43,7 +42,7 @@ class _QuizResults extends State<QuizResults> {
 
   @override
   Widget build(BuildContext context) {
-    stringPercent = "${percent.toString()}" + "%";
+    stringPercent = "$percent%";
     return Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
@@ -91,7 +90,7 @@ class _QuizResults extends State<QuizResults> {
                     ),
                     Container(
                         margin: const EdgeInsets.all(15),
-                        child: const Text("Questions correct")),
+                        child: Text(S.of(context).questionsCorrect)),
                     Container(
                         margin: const EdgeInsets.all(15),
                         child: ElevatedButton(
@@ -104,14 +103,14 @@ class _QuizResults extends State<QuizResults> {
                                             topic: topic,
                                           )));
                             },
-                            child: const Text("Try again?"))),
+                            child: Text(S.of(context).tryAgain))),
                     Container(
                         margin: const EdgeInsets.all(15),
                         child: ElevatedButton(
                             onPressed: () {
                               Navigator.of(context).pop();
                             },
-                            child: const Text("Quit")))
+                            child: Text(S.of(context).quit)))
                   ],
                 ))));
   }

@@ -1,9 +1,7 @@
-
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import '../../generated/l10n.dart';
 import 'package:math/UI/admin/section_choice_admin.dart';
-import 'package:math/UI/learning/learning.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class AdminInit extends StatefulWidget {
@@ -19,73 +17,108 @@ class _AdminInitState extends State<AdminInit> {
   late User? user;
 
   FirebaseFirestore db = FirebaseFirestore.instance;
+  final sectionController = TextEditingController();
   var levelList = {
+    "Primary school 1-3": "0",
+    "Primary school 4-6": "1",
+    "Primary school  7-8": "2",
+    "High school basic level": "3",
+    "High school advanced level": "4"
+  };
+  var levelListPl = {
     "Szkoła podstawowa 1-3": "0",
     "Szkoła podstawowa 4-6": "1",
     "Szkoła podstawowa 7-8": "2",
     "Szkoła średnia poziom podstawowy": "3",
     "Skoła średnia poziom rozszerzony": "4"
   };
-  var languageList = ["en_GB", "pl_PL"];
-  var typeList = ["section", "topic", "theory", "practice", "quiz","section quiz"];
+  var languageList = {"English": "en", "Polish": "pl"};
+  var languageListPl = {"Angielski": "en", "Polski": "pl"};
+  var typeListPl = {
+    "rozdział": "0",
+    "temat": "1",
+    "teoria": "2",
+    "nauka": "3",
+    "quiz": "4",
+    "quiz rozdziału": "5"
+  };
+  var typeList = {
+    "section": "0",
+    "topic": "1",
+    "theory": "2",
+    "practice": "3",
+    "quiz": "4",
+    "section quiz": "5"
+  };
   String typeDropdown = "";
   String classDropdown = "";
   String langDropdown = "";
-
+  late Locale locale;
   bool flag = false;
   TextEditingController controller = TextEditingController();
+  int levelIndex = 99;
+  int langIndex = 99;
+  int typeIndex = 99;
 
-  next() {
-
-    if (typeDropdown == "section") {
-      flag = true;
-      setState(() {});
-    }
-     else {
-
-       String? temp =levelList[classDropdown];
-       print(temp);
-       print(langDropdown);
-       print(typeDropdown);
+  next(BuildContext context) {
+    if (typeIndex == 0) {
+      showSectionDialog(context);
+    } else {
       Navigator.push(
           context,
           MaterialPageRoute(
               builder: (context) => SectionChoice(
-                  level: temp,
-                  lang: langDropdown,
-                  type: typeDropdown)));
+                  level: levelList.values.elementAt(langIndex),
+                  lang: languageList.values.elementAt(langIndex),
+                  type: typeList.values.elementAt(typeIndex))));
     }
   }
-  Future<void> addSection() async {
-    db.collection("Section").add({"lang": langDropdown,"name": controller.text, "level": levelList[classDropdown]});
-  }
 
-  submitToDB(){
-    addSection();
-    //popup
-    flag=false;
-    classDropdown = levelList.keys.first;
-    langDropdown = languageList.first;
-    typeDropdown = typeList.first;
-    setState(() {});
+  Future<void> addSection() async {
+    try{
+      db.collection("Section").add({
+        "lang": languageList.values.elementAt(langIndex),
+        "name": sectionController.text,
+        "level": levelList.values.elementAt(levelIndex)
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+           SnackBar(content: Text(S.of(context).sectionSubmittedSuccessfully)));
+    }
+    catch(e){
+      ScaffoldMessenger.of(context).showSnackBar(
+           SnackBar(content: Text(S.of(context).submissionFailed)));
+    }
+
+    sectionController.text = "";
   }
 
   @override
   void initState() {
     user = FirebaseAuth.instance.currentUser;
-    classDropdown = levelList.keys.first;
-    langDropdown = languageList.first;
-    typeDropdown = typeList.first;
+    initTables();
     super.initState();
+  }
+
+  initTables() async {}
+
+  @override
+  void didChangeDependencies() {
+    locale = Localizations.localeOf(context);
+    if (locale.languageCode.toString()=="pl") {
+      typeList = typeListPl;
+      levelList = levelListPl;
+      languageList = languageListPl;
+    }
+    setState(() {});
+    super.didChangeDependencies();
   }
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: const Text("Choose level"),
+        title: Text(S.of(context).dataImport),
       ),
       body: Container(
           decoration: BoxDecoration(
@@ -105,114 +138,137 @@ class _AdminInitState extends State<AdminInit> {
                 borderRadius: BorderRadius.circular(10.0),
                 color: Colors.white.withOpacity(0.8),
               ),
-              child: SingleChildScrollView(child: flag?buildInput():buildDropdowns()))),
+              child: buildPicker())),
     );
   }
 
-  Column buildInput() {
+  Column buildPicker() {
     return Column(
       children: [
-        const Text(
-          "Submit name for your section",
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-        ),
-        TextFormField(
-            enableSuggestions: false,
-            autocorrect: false,
-            controller: controller,
-            decoration: InputDecoration(
-                contentPadding:
-                    const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10.0)),
-               )),
-        ElevatedButton(onPressed: (){
-          submitToDB();
-        }, child: const Text("Submit"))
+        Container(
+            margin: const EdgeInsets.all(20),
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(4.0),
+                  child: Text(S.of(context).chooseLevel),
+                ),
+                Wrap(
+                  alignment: WrapAlignment.spaceEvenly,
+                  children: [
+                    for (var i = 0; i < levelList.keys.length; i++)
+                      ChoiceChip(
+                          label: Text(levelList.keys.elementAt(i)),
+                          selected: levelIndex == i,
+                          selectedColor: Colors.teal,
+                          backgroundColor: Colors.pink,
+                          labelStyle: const TextStyle(color: Colors.white),
+                          onSelected: (bool value) {
+                            setState(() {
+                              levelIndex = i;
+                            });
+                          }),
+                  ],
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(S.of(context).chooseLanguage),
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    for (var i = 0; i < languageList.keys.length; i++)
+                      ChoiceChip(
+                          label: Text(languageList.keys.elementAt(i)),
+                          selected: langIndex == i,
+                          selectedColor: Colors.teal,
+                          backgroundColor: Colors.pink,
+                          labelStyle: const TextStyle(color: Colors.white),
+                          onSelected: (bool value) {
+                            setState(() {
+                              langIndex = i;
+                            });
+                          })
+                  ],
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(S.of(context).chooseDataType),
+                ),
+                Wrap(
+                  alignment: WrapAlignment.spaceEvenly,
+                  children: [
+                    for (var i = 0; i < typeList.keys.length; i++)
+                      ChoiceChip(
+                          label: Text(typeList.keys.elementAt(i)),
+                          selected: typeIndex == i,
+                          selectedColor: Colors.teal,
+                          backgroundColor: Colors.pink,
+                          labelStyle: const TextStyle(color: Colors.white),
+                          onSelected: (bool value) {
+                            setState(() {
+                              typeIndex = i;
+                            });
+                          })
+                  ],
+                )
+              ],
+            )),
+        ElevatedButton(
+            onPressed: () {
+              next(context);
+            },
+            child: Text(S.of(context).next))
       ],
     );
   }
 
-  Column buildDropdowns() {
-    return Column(
-      children: [
-        Container(
-          margin: const EdgeInsets.all(40),
-          child: DropdownButton<String>(
-            value: classDropdown,
-            icon: const Icon(Icons.arrow_downward),
-            elevation: 16,
-            style: const TextStyle(color: Colors.pink),
-            underline: Container(
-              height: 2,
-              color: Colors.tealAccent,
+  showSectionDialog(BuildContext context) {
+    showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(
+                Radius.circular(
+                  20.0,
+                ),
+              ),
             ),
-            onChanged: (String? value) {
-              classDropdown = value!;
-              print(classDropdown);
-              setState(() {});
-            },
-            items: levelList.keys.map<DropdownMenuItem<String>>((String value) {
-              return DropdownMenuItem<String>(
-                value: value,
-                child: Text(value),
-              );
-            }).toList(),
-          ),
-        ),
-        Container(
-          margin: const EdgeInsets.all(40),
-          child: DropdownButton<String>(
-            value: langDropdown,
-            icon: const Icon(Icons.arrow_downward),
-            elevation: 16,
-            style: const TextStyle(color: Colors.pink),
-            underline: Container(
-              height: 2,
-              color: Colors.tealAccent,
+            contentPadding: const EdgeInsets.only(
+              top: 10.0,
             ),
-            onChanged: (String? value) {
-              // This is called when the user selects an item.
-              setState(() {
-                langDropdown = value!;
-              });
-            },
-            items: languageList.map<DropdownMenuItem<String>>((String value) {
-              return DropdownMenuItem<String>(
-                value: value,
-                child: Text(value),
-              );
-            }).toList(),
-          ),
-        ),
-        Container(
-          margin: const EdgeInsets.all(40),
-          child: DropdownButton<String>(
-            value: typeDropdown,
-            icon: const Icon(Icons.arrow_downward),
-            elevation: 16,
-            style: const TextStyle(color: Colors.pink),
-            underline: Container(
-              height: 2,
-              color: Colors.tealAccent,
+            content: SizedBox(
+              height: 140,
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: TextField(
+                      obscureText: false,
+                      enableSuggestions: false,
+                      autocorrect: false,
+                      controller: sectionController,
+                      decoration: InputDecoration(
+                          contentPadding: const EdgeInsets.symmetric(
+                              vertical: 10, horizontal: 20),
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10.0)),
+                          hintText: "Section name"),
+                    ),
+                  ),
+                  ElevatedButton(
+                      onPressed: () {
+                        addSection();
+                        Navigator.of(context).pop();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("Section submitted")));
+                      },
+                      child: const Text("Submit"))
+                ],
+              ),
             ),
-            onChanged: (String? value) {
-              // This is called when the user selects an item.
-              setState(() {
-                typeDropdown = value!;
-                print(typeDropdown);
-              });
-            },
-            items: typeList.map<DropdownMenuItem<String>>((String value) {
-              return DropdownMenuItem<String>(
-                value: value,
-                child: Text(value),
-              );
-            }).toList(),
-          ),
-        ),
-        ElevatedButton(onPressed: () {next();}, child: const Text("Next"))
-      ],
-    );
+          );
+        });
   }
 }

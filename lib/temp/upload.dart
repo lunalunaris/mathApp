@@ -10,8 +10,8 @@ import 'package:math_keyboard/math_keyboard.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:path/path.dart';
 
-import '../../Model/QuizModel.dart';
-import '../../Model/TheoryModel.dart';
+import '../Model/QuizModel.dart';
+import '../Model/TheoryModel.dart';
 
 class Upload extends StatefulWidget {
   late String type;

@@ -38,11 +38,17 @@ class _TopicChoice extends State<TopicChoice> {
   void initState() {
     user =FirebaseAuth.instance.currentUser;
     section = widget.section;
-    lang = Platform.localeName;
-    initTopicList(section);
+    // lang = Platform.localeName;
+    // initTopicList(section);
     super.initState();
   }
-
+  @override
+  void didChangeDependencies() {
+    lang = Localizations.localeOf(context).languageCode.toString();
+    initTopicList(section);
+    setState(() {});
+    super.didChangeDependencies();
+  }
 
   initTopicList(SectionModel section) async {
     await db
