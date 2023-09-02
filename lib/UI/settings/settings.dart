@@ -6,18 +6,17 @@ import 'package:math/UI/account/login.dart';
 import 'package:math/UI/admin/admin_init.dart';
 import 'package:math/UI/learning/learning.dart';
 import 'package:math/UI/learning/level_choice.dart';
-import 'dart:developer' as developer;
 
 class UserSettings extends StatefulWidget {
   @override
   State<UserSettings> createState() => _Settings();
 
-  UserSettings({Key? key}) : super(key: key);
+  const UserSettings({Key? key}) : super(key: key);
 }
 
 class _Settings extends State<UserSettings> {
   late User? user;
-  late String userRole="";
+  late String userRole = "";
   FirebaseFirestore db = FirebaseFirestore.instance;
 
   @override
@@ -39,47 +38,51 @@ class _Settings extends State<UserSettings> {
         .doc(user?.uid)
         .get()
         .then((querySnapshot) async {
-      print("role completed");
       userRole = querySnapshot["role"];
-      print(userRole);
       setState(() {});
     });
   }
 
-
   Future<void> clearPractice() async {
-    var collection = FirebaseFirestore.instance.collection('PracticeCompleted').where(
-        "user", isEqualTo: user?.uid);
+    var collection = FirebaseFirestore.instance
+        .collection('PracticeCompleted')
+        .where("user", isEqualTo: user?.uid);
     var snapshots = await collection.get();
     for (var doc in snapshots.docs) {
       await doc.reference.delete();
     }
   }
+
   Future<void> clearSection() async {
-    var collection = FirebaseFirestore.instance.collection('SectionQuizCompleted').where(
-        "user", isEqualTo: user?.uid);
+    var collection = FirebaseFirestore.instance
+        .collection('SectionQuizCompleted')
+        .where("user", isEqualTo: user?.uid);
     var snapshots = await collection.get();
     for (var doc in snapshots.docs) {
       await doc.reference.delete();
     }
   }
+
   Future<void> clearTopic() async {
-    var collection = FirebaseFirestore.instance.collection('TopicQuizCompleted').where(
-        "user", isEqualTo: user?.uid);
+    var collection = FirebaseFirestore.instance
+        .collection('TopicQuizCompleted')
+        .where("user", isEqualTo: user?.uid);
     var snapshots = await collection.get();
     for (var doc in snapshots.docs) {
       await doc.reference.delete();
     }
   }
+
   Future<void> _signOut() async {
     await FirebaseAuth.instance.signOut();
   }
-  signOutUser(){
+
+  signOutUser() {
     _signOut();
     Navigator.of(context).pop();
-    Navigator.push(context,
-        MaterialPageRoute(builder: (context) => Login()));
+    Navigator.push(context, MaterialPageRoute(builder: (context) => const Login()));
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -87,7 +90,7 @@ class _Settings extends State<UserSettings> {
         title: const Text("Settings"),
       ),
       body: Container(
-        alignment: Alignment.center,
+          alignment: Alignment.center,
           decoration: BoxDecoration(
               gradient: LinearGradient(
             begin: Alignment.topCenter,
@@ -106,25 +109,29 @@ class _Settings extends State<UserSettings> {
               color: Colors.white.withOpacity(0.8),
             ),
             child: Container(
-              margin: EdgeInsets.only(top: 200),
+              margin: const EdgeInsets.only(top: 200),
               child: ListView(
                 children: [
-                  Divider(height: 0,),
-
+                  const Divider(
+                    height: 0,
+                  ),
                   ListTile(
                     leading: const Icon(Icons.change_circle_outlined),
                     title: TextButton(
                         onPressed: () {
-                          Navigator.push(context,
-                              MaterialPageRoute(builder: (context) => LevelChoice()));
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => LevelChoice()));
                         },
                         style: ButtonStyle(
                             backgroundColor: MaterialStateProperty.all(
                                 Colors.white.withOpacity(0.1)),
-                            shape:
-                                MaterialStateProperty.all<RoundedRectangleBorder>(
-                                    const RoundedRectangleBorder(
-                              borderRadius: BorderRadius.all(Radius.circular(5)),
+                            shape: MaterialStateProperty.all<
+                                    RoundedRectangleBorder>(
+                                const RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(5)),
                             ))),
                         child: const Text(
                           "Change level",
@@ -134,7 +141,9 @@ class _Settings extends State<UserSettings> {
                               color: Colors.black54),
                         )),
                   ),
-                  Divider(height: 0,),
+                  const Divider(
+                    height: 0,
+                  ),
                   ListTile(
                     leading: const Icon(Icons.cleaning_services_rounded),
                     title: TextButton(
@@ -144,11 +153,12 @@ class _Settings extends State<UserSettings> {
                         style: ButtonStyle(
                             backgroundColor: MaterialStateProperty.all(
                                 Colors.white.withOpacity(0.1)),
-                            shape:
-                            MaterialStateProperty.all<RoundedRectangleBorder>(
+                            shape: MaterialStateProperty.all<
+                                    RoundedRectangleBorder>(
                                 const RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.all(Radius.circular(5)),
-                                ))),
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(5)),
+                            ))),
                         child: const Text(
                           "Clear progress",
                           style: TextStyle(
@@ -157,8 +167,9 @@ class _Settings extends State<UserSettings> {
                               color: Colors.black54),
                         )),
                   ),
-                  Divider(height: 0,),
-
+                  const Divider(
+                    height: 0,
+                  ),
                   ListTile(
                     leading: const Icon(Icons.logout_rounded),
                     title: TextButton(
@@ -168,11 +179,12 @@ class _Settings extends State<UserSettings> {
                         style: ButtonStyle(
                             backgroundColor: MaterialStateProperty.all(
                                 Colors.white.withOpacity(0.1)),
-                            shape:
-                            MaterialStateProperty.all<RoundedRectangleBorder>(
+                            shape: MaterialStateProperty.all<
+                                    RoundedRectangleBorder>(
                                 const RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.all(Radius.circular(5)),
-                                ))),
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(5)),
+                            ))),
                         child: const Text(
                           "Log out",
                           style: TextStyle(
@@ -181,36 +193,42 @@ class _Settings extends State<UserSettings> {
                               color: Colors.black54),
                         )),
                   ),
-                  Divider(height: 0,),
-                  if(userRole=="admin")
-                  ListTile(
-                    leading: const Icon(Icons.admin_panel_settings_rounded),
-                    title: TextButton(
-                        onPressed: () {
-                          Navigator.push(
-                              context, MaterialPageRoute(builder: (context) =>  AdminInit()));
-                        },
-                        style: ButtonStyle(
-                            backgroundColor: MaterialStateProperty.all(
-                                Colors.white.withOpacity(0.1)),
-                            shape:
-                            MaterialStateProperty.all<RoundedRectangleBorder>(
-                                const RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.all(Radius.circular(5)),
-                                ))),
-                        child: const Text(
-                          "Admin panel",
-                          style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black54),
-                        )),
+                  const Divider(
+                    height: 0,
                   ),
-                  Divider(height: 0,),
+                  if (userRole == "admin")
+                    ListTile(
+                      leading: const Icon(Icons.admin_panel_settings_rounded),
+                      title: TextButton(
+                          onPressed: () {
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => AdminInit()));
+                          },
+                          style: ButtonStyle(
+                              backgroundColor: MaterialStateProperty.all(
+                                  Colors.white.withOpacity(0.1)),
+                              shape: MaterialStateProperty.all<
+                                      RoundedRectangleBorder>(
+                                  const RoundedRectangleBorder(
+                                borderRadius:
+                                    BorderRadius.all(Radius.circular(5)),
+                              ))),
+                          child: const Text(
+                            "Admin panel",
+                            style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black54),
+                          )),
+                    ),
+                  const Divider(
+                    height: 0,
+                  ),
                 ],
               ),
             ),
-
           )),
       //   Table(
       //       children: [
@@ -266,7 +284,7 @@ class _Settings extends State<UserSettings> {
               case 0:
                 Navigator.of(context).pop();
                 Navigator.push(context,
-                    MaterialPageRoute(builder: (context) => Learning()));
+                    MaterialPageRoute(builder: (context) => const Learning()));
                 break;
             }
             // case 2:

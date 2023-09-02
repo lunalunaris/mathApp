@@ -6,12 +6,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:math/Model/PracticeModel.dart';
-import 'package:math/Model/TopicModel.dart';
 import 'package:math_keyboard/math_keyboard.dart';
-import 'package:flutter_tex/flutter_tex.dart';
-import 'package:flutter_math_fork/ast.dart';
-import 'package:flutter_math_fork/flutter_math.dart';
-import 'package:flutter_math_fork/tex.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:path/path.dart';
 
@@ -68,13 +63,14 @@ class _Upload extends State<Upload> {
       MathFieldEditingController();
   String dInput = "";
   var imageUrl = "";
-  Color cameraColorImg=Colors.black45;
-  Color cameraColorResult=Colors.black45;
+  Color cameraColorImg = Colors.black45;
+  Color cameraColorResult = Colors.black45;
   File? imageFirst;
   File? image;
   File? imageSecond;
-  String imagePathFirst="";
-  String imagePathSecond="";
+  String imagePathFirst = "";
+  String imagePathSecond = "";
+  List<File> selectedTheoryImg = [];
   final ImagePicker imagePicker = ImagePicker();
 
   Future imgFirstFromFile() async {
@@ -86,7 +82,8 @@ class _Upload extends State<Upload> {
       }
     });
   }
-  Future imgSecondFromFile() async{
+
+  Future imgSecondFromFile() async {
     final chosenImg = await imagePicker.pickImage(source: ImageSource.gallery);
     setState(() {
       if (chosenImg != null) {
@@ -96,15 +93,14 @@ class _Upload extends State<Upload> {
     });
   }
 
-  Future fileToFirebase() async {
-
+  Future fileToFirebase(File? image) async {
     if (image != null) {
-      final name = basename(image!.path);
+      final name = basename(image.path);
       final dest = 'questions/$name';
       try {
         // final ref =storage.ref(dest).child('file/');
         // await ref.putFile(image!);
-        var snapshot = await storage.ref(dest).putFile(image!);
+        var snapshot = await storage.ref(dest).putFile(image);
         var downloadUrl = await snapshot.ref.getDownloadURL();
         setState(() {
           imageUrl = downloadUrl;
@@ -123,6 +119,7 @@ class _Upload extends State<Upload> {
     user = FirebaseAuth.instance.currentUser;
     super.initState();
   }
+
   Future<void> addTheory(TheoryModel theory) async {
     db.collection("Theory").add(theory.toFirestore()).then((documentSnapshot) =>
         print("Added Data with ID: ${documentSnapshot.id}"));
@@ -130,7 +127,7 @@ class _Upload extends State<Upload> {
 
   Future<void> addPractice(PracticeModel practice) async {
     db.collection("Practice").add(practice.toFirestore()).then(
-            (documentSnapshot) =>
+        (documentSnapshot) =>
             print("Added Data with ID: ${documentSnapshot.id}"));
   }
 
@@ -142,9 +139,10 @@ class _Upload extends State<Upload> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: const Text("Practice"),
+        title: Text(type),
       ),
       body: Container(
           decoration: BoxDecoration(
@@ -175,13 +173,11 @@ class _Upload extends State<Upload> {
     );
   }
 
-  submitTheory(BuildContext context) {
-    TheoryModel theory = TheoryModel(id: "none", topicId: container, img: imagePathFirst );
-    addTheory(theory);
-  }
+
 
   submitPractice(BuildContext context) {
-    PracticeModel practice= PracticeModel(id: "none",
+    PracticeModel practice = PracticeModel(
+        id: "none",
         topicId: container,
         content: practiceContentController.text,
         equation: equationInput,
@@ -195,103 +191,211 @@ class _Upload extends State<Upload> {
 
   submitQuiz(BuildContext context) {}
 
+  Future getTheoryPhotos() async{
+    final files = await imagePicker.pickMultiImage(
+      maxWidth: 500,
+      maxHeight: 500
+    );
+    List<XFile> filePick= files;
+    if(filePick.isNotEmpty){
+      for (var i in filePick){
+        selectedTheoryImg.add(File(i.path));
+      }
+      setState(() {
+      });
+      submitTheory();
+    }
+    else {
+              ScaffoldMessenger.of(context as BuildContext).showSnackBar(
+                  const SnackBar(content: Text('Nothing is selected')));
+            }
+  }
+  submitTheory() async {
+    for(var i in selectedTheoryImg){
+      final name = basename(i.path);
+      final dest = 'theory/$name';
+      try {
+        var snapshot = await storage.ref(dest).putFile(i);
+        var downloadUrl = await snapshot.ref.getDownloadURL();
+        TheoryModel theory =
+        TheoryModel(id: "none", topicId: container, img: downloadUrl);
+        addTheory(theory);
+      } catch (e) {
+        print(e.toString());
+      }
+    }
+  }
+  Future<void> getTheoryFromCamera() async {
+    final files = await imagePicker.pickImage(source: ImageSource.camera,
+        maxWidth: 500,
+        maxHeight: 500
+    );
+    XFile? filePick= files;
+    if(filePick !=null){
+        selectedTheoryImg.add(File(filePick.path));
+      setState(() {
+      });
+      submitTheory();
+    }
+    else {
+      ScaffoldMessenger.of(context as BuildContext).showSnackBar(
+          const SnackBar(content: Text('Nothing is selected')));
+    }
+  }
   Column buildTheoryView(BuildContext context) {
     return Column(
       children: [
-        Text("Upload theory images"),
-        IconButton(
-          onPressed: () {
-          //  imgFromFile();
-            imagePathFirst =imageUrl;
-            setState(() {});
-          },
-          icon: Icon(Icons.add_a_photo_rounded),
-          style: ButtonStyle(
-            iconColor: MaterialStateProperty.all(cameraColorImg)
+        Padding(
+          padding: const EdgeInsets.all(15.0),
+          child: FloatingActionButton.extended(
+            onPressed: () {
+              getTheoryPhotos();
+              setState(() {});
+            },
+            label: const Text("Upload theory images"),
+            backgroundColor: Colors.pink.shade800,
+            icon: const Icon(Icons.add_a_photo_rounded),
           ),
         ),
-        //maybe matex file input]
-        ElevatedButton(
+        Padding(
+          padding: const EdgeInsets.all(15.0),
+          child: FloatingActionButton.extended(
             onPressed: () {
-              submitTheory(context);
+              getTheoryFromCamera();
+              setState(() {});
             },
-            child: const Text("Submit"))
+            label: const Text("Upload from camera"),
+            backgroundColor: Colors.pink.shade800,
+            icon: const Icon(Icons.add_a_photo_rounded),
+          ),
+        ),
+
+
+        // ElevatedButton(
+        //     onPressed: () {
+        //       if(selectedTheoryImg.isNotEmpty){
+        //         submitTheory(context);
+        //       }
+        //       else {
+        //         ScaffoldMessenger.of(context).showSnackBar(
+        //             const SnackBar(content: Text('Nothing is selected')));
+        //       }
+        //     },
+        //     child: const Text("Submit"))
       ],
     );
   }
 
   SingleChildScrollView buildPracticeView(BuildContext context) {
     return SingleChildScrollView(
+      reverse: true,
       child: Container(
         child: Column(
           children: [
-            const Text("Task contents"),
-            TextFormField(
-              controller: practiceContentController,
-            ),
-            const Text("Equations"),
-            MathField(
-              controller: practiceEquationController,
-              keyboardType: MathKeyboardType.expression,
-              variables: const ['x', 'y', 'z'],
-              decoration: const InputDecoration(),
-              onChanged: (String value) {},
-              onSubmitted: (String value) {
-                equationInput = value;
-                setState(() {});
-              },
-              autofocus: false,
-            ),
-            const Text("Image"),
-            IconButton(
-              onPressed: () {
-                //imgFromFile();
-                imagePathFirst =imageUrl;
-                print(imagePathFirst);
-                setState(() {});
-              },
-              icon: Icon(Icons.add_a_photo_rounded),
-              style: ButtonStyle(
-                  iconColor: MaterialStateProperty.all(cameraColorImg)
+            Padding(
+              padding: const EdgeInsets.all(5.0),
+              child: TextField(
+                decoration: InputDecoration(
+                  contentPadding:
+                      const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10.0)),
+                  hintText: "Practice task content",
+                ),
+                controller: practiceContentController,
               ),
             ),
-            const Text("Text result"),
-            MathField(
-              controller: practiceResultController,
-              keyboardType: MathKeyboardType.expression,
-              variables: const ['x', 'y', 'z'],
-              decoration: const InputDecoration(),
-              onChanged: (String value) {},
-              onSubmitted: (String value) {
-                resultInput = value;
-                setState(() {});
-              },
-              autofocus: false,
-            ),
-            const Text("Result image"),
-            IconButton(
-              onPressed: () {
-                //imgFromFile();
-                imagePathSecond =imageUrl;
-                setState(() {});
-              },
-              icon: Icon(Icons.add_a_photo_rounded),
-              style: ButtonStyle(
-                  iconColor: MaterialStateProperty.all(cameraColorResult)
+            Padding(
+              padding: const EdgeInsets.all(5.0),
+              child: MathField(
+                controller: practiceEquationController,
+                keyboardType: MathKeyboardType.expression,
+                variables: const ['x', 'y', 'z'],
+                decoration: InputDecoration(
+                  contentPadding:
+                      const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10.0)),
+                  hintText: "Equations",
+                ),
+                onChanged: (String value) {},
+                onSubmitted: (String value) {
+                  equationInput = value;
+                  setState(() {});
+                },
+                autofocus: false,
               ),
             ),
-            const Text("Solution suggestions"),
-            MathField(
-              controller: practiceSolutionsController,
-              keyboardType: MathKeyboardType.expression,
-              variables: const ['x', 'y', 'z'],
-              decoration: const InputDecoration(),
-              onChanged: (String value) {},
-              onSubmitted: (String value) {
-                solutionInput = value;
-                setState(() {});
-              },
-              autofocus: false,
+            Padding(
+              padding: const EdgeInsets.all(5.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  FloatingActionButton.extended(
+                    onPressed: () {
+                      //imgFromFile();
+                      imagePathFirst = imageUrl;
+                      print(imagePathFirst);
+                      setState(() {});
+                    },
+                    label: const Text("Task image"),
+                    backgroundColor: Colors.pink.shade800,
+                    icon: const Icon(Icons.add_a_photo_rounded),
+                  ),
+                  FloatingActionButton.extended(
+                    onPressed: () {
+                      //imgFromFile();
+                      imagePathSecond = imageUrl;
+                      setState(() {});
+                    },
+                    label: const Text("Result image"),
+                    backgroundColor: Colors.pink.shade800,
+                    icon: const Icon(Icons.add_a_photo_rounded),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(5.0),
+              child: MathField(
+                controller: practiceResultController,
+                keyboardType: MathKeyboardType.expression,
+                variables: const ['x', 'y', 'z'],
+                decoration: InputDecoration(
+                  contentPadding:
+                      const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10.0)),
+                  hintText: "Text correct result",
+                ),
+                onChanged: (String value) {},
+                onSubmitted: (String value) {
+                  resultInput = value;
+                  setState(() {});
+                },
+                autofocus: false,
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(5.0),
+              child: MathField(
+                controller: practiceSolutionsController,
+                keyboardType: MathKeyboardType.expression,
+                variables: const ['x', 'y', 'z'],
+                decoration: InputDecoration(
+                  contentPadding:
+                      const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10.0)),
+                  hintText: "Suggested solution methods",
+                ),
+                onChanged: (String value) {},
+                onSubmitted: (String value) {
+                  solutionInput = value;
+                  setState(() {});
+                },
+                autofocus: false,
+              ),
             ),
             ElevatedButton(
                 onPressed: () {
@@ -306,115 +410,186 @@ class _Upload extends State<Upload> {
 
   SingleChildScrollView buildQuizView(BuildContext context) {
     return SingleChildScrollView(
-      child: Column(
-        children: [
-          const Text("Quiz contents"),
-          TextFormField(
-            controller: quizContentController,
-          ),
-          const Text("Equations"),
-          MathField(
-            controller: quizEquationController,
-            keyboardType: MathKeyboardType.expression,
-            variables: const ['x', 'y', 'z'],
-            decoration: const InputDecoration(),
-            onChanged: (String value) {},
-            onSubmitted: (String value) {
-              equationInput = value;
-              setState(() {});
-
-            },
-            autofocus: false,
-          ),
-          const Text("Image"),
-          IconButton(
-            onPressed: () {
-           //   imgFromFile();
-              imagePathFirst =imageUrl;
-              setState(() {});
-
-            },
-            icon: Icon(Icons.add_a_photo_rounded),
-            style: ButtonStyle(
-                iconColor: MaterialStateProperty.all(cameraColorImg)
+      reverse: true,
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 5),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                IconButton(
+                  onPressed: () {
+                    //   imgFromFile();
+                    imagePathFirst = imageUrl;
+                    setState(() {});
+                  },
+                  icon: const Icon(Icons.add_a_photo_rounded),
+                  style: ButtonStyle(
+                      iconColor: MaterialStateProperty.all(cameraColorImg)),
+                ),
+              ],
             ),
-          ),
-          const Text("Correct result"),
-          MathField(
-            controller: quizResultController,
-            keyboardType: MathKeyboardType.expression,
-            variables: const ['x', 'y', 'z'],
-            decoration: const InputDecoration(),
-            onChanged: (String value) {},
-            onSubmitted: (String value) {
-              resultInput = value;
-              setState(() {});
-
-            },
-            autofocus: false,
-          ),
-          const Text("Solutions"), //summarise later
-          MathField(
-            controller: ASolutionsController,
-            keyboardType: MathKeyboardType.expression,
-            variables: const ['x', 'y', 'z'],
-            decoration: const InputDecoration(),
-            onChanged: (String value) {},
-            onSubmitted: (String value) {
-              aInput = value;
-              setState(() {});
-
-            },
-            autofocus: false,
-          ),
-          MathField(
-            controller: BSolutionsController,
-            keyboardType: MathKeyboardType.expression,
-            variables: const ['x', 'y', 'z'],
-            decoration: const InputDecoration(),
-            onChanged: (String value) {},
-            onSubmitted: (String value) {
-              bInput = value;
-              setState(() {});
-
-            },
-            autofocus: false,
-          ),
-          MathField(
-            controller: CSolutionsController,
-            keyboardType: MathKeyboardType.expression,
-            variables: const ['x', 'y', 'z'],
-            decoration: const InputDecoration(),
-            onChanged: (String value) {},
-            onSubmitted: (String value) {
-              cInput = value;
-              setState(() {});
-
-            },
-            autofocus: false,
-          ),
-          MathField(
-            controller: DSolutionsController,
-            keyboardType: MathKeyboardType.expression,
-            variables: const ['x', 'y', 'z'],
-            decoration: const InputDecoration(),
-            onChanged: (String value) {},
-            onSubmitted: (String value) {
-              dInput = value;
-              setState(() {});
-
-            },
-            autofocus: false,
-          ),
-          ElevatedButton(
-              onPressed: () {
-                submitQuiz(context);
-              },
-              child: const Text("Submit"))
-        ],
+            Padding(
+              padding: const EdgeInsets.all(4.0),
+              child: TextField(
+                  controller: quizContentController,
+                  decoration: InputDecoration(
+                    contentPadding: const EdgeInsets.symmetric(
+                        vertical: 10, horizontal: 20),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10.0)),
+                    hintText: "Quiz task content",
+                  )),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(4.0),
+              child: MathField(
+                controller: quizEquationController,
+                keyboardType: MathKeyboardType.expression,
+                variables: const ['x', 'y', 'z'],
+                decoration: InputDecoration(
+                  contentPadding:
+                      const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10.0)),
+                  hintText: "Equations",
+                ),
+                onChanged: (String value) {},
+                onSubmitted: (String value) {
+                  equationInput = value;
+                  setState(() {});
+                },
+                autofocus: false,
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(4.0),
+              child: MathField(
+                controller: quizResultController,
+                keyboardType: MathKeyboardType.expression,
+                variables: const ['x', 'y', 'z'],
+                decoration: InputDecoration(
+                  contentPadding:
+                      const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10.0)),
+                  hintText: "Correct result",
+                ),
+                onChanged: (String value) {},
+                onSubmitted: (String value) {
+                  resultInput = value;
+                  setState(() {});
+                },
+                autofocus: false,
+              ),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                SizedBox(
+                  width: MediaQuery.of(context).size.width / 3,
+                  child: MathField(
+                    controller: ASolutionsController,
+                    keyboardType: MathKeyboardType.expression,
+                    variables: const ['x', 'y', 'z'],
+                    decoration: InputDecoration(
+                      contentPadding: const EdgeInsets.symmetric(
+                          vertical: 10, horizontal: 20),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10.0)),
+                      hintText: "A",
+                    ),
+                    onChanged: (String value) {},
+                    onSubmitted: (String value) {
+                      aInput = value;
+                      setState(() {});
+                    },
+                    autofocus: false,
+                  ),
+                ),
+                SizedBox(
+                  width: MediaQuery.of(context).size.width / 3,
+                  child: MathField(
+                    controller: BSolutionsController,
+                    keyboardType: MathKeyboardType.expression,
+                    variables: const ['x', 'y', 'z'],
+                    decoration: InputDecoration(
+                      contentPadding: const EdgeInsets.symmetric(
+                          vertical: 10, horizontal: 20),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10.0)),
+                      hintText: "B",
+                    ),
+                    onChanged: (String value) {},
+                    onSubmitted: (String value) {
+                      bInput = value;
+                      setState(() {});
+                    },
+                    autofocus: false,
+                  ),
+                ),
+              ],
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                SizedBox(
+                  width: MediaQuery.of(context).size.width / 3,
+                  child: MathField(
+                    controller: CSolutionsController,
+                    keyboardType: MathKeyboardType.expression,
+                    variables: const ['x', 'y', 'z'],
+                    decoration: InputDecoration(
+                      contentPadding: const EdgeInsets.symmetric(
+                          vertical: 10, horizontal: 20),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10.0)),
+                      hintText: "C",
+                    ),
+                    onChanged: (String value) {},
+                    onSubmitted: (String value) {
+                      cInput = value;
+                      setState(() {});
+                    },
+                    autofocus: false,
+                  ),
+                ),
+                SizedBox(
+                  width: MediaQuery.of(context).size.width / 3,
+                  child: MathField(
+                    controller: DSolutionsController,
+                    keyboardType: MathKeyboardType.expression,
+                    variables: const ['x', 'y', 'z'],
+                    decoration: InputDecoration(
+                      contentPadding: const EdgeInsets.symmetric(
+                          vertical: 10, horizontal: 20),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10.0)),
+                      hintText: "D",
+                    ),
+                    onChanged: (String value) {},
+                    onSubmitted: (String value) {
+                      dInput = value;
+                      setState(() {});
+                    },
+                    autofocus: false,
+                  ),
+                ),
+              ],
+            ),
+            ElevatedButton(
+                onPressed: () {
+                  submitQuiz(context);
+                },
+                child: const Text("Submit"))
+          ],
+        ),
       ),
     );
   }
+
+
 }
 
 // List<PracticeModel> practiceList = [

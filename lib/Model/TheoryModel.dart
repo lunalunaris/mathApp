@@ -4,8 +4,6 @@ class TheoryModel {
   late final String id;
   late final String topicId;
   late final String img;
-  late final String section;
-  late final String lang;
 
   TheoryModel(
       {required this.id,

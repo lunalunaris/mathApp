@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
@@ -5,9 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
 import 'package:math/Model/QuizModel.dart';
 import 'package:math/Model/SectionModel.dart';
-import 'package:math/Model/TopicModel.dart';
-import 'package:math/UI/learning/quiz_results.dart';
-import 'dart:math';
+
 
 import 'package:math/UI/learning/quiz_section_results.dart';
 
@@ -27,11 +26,11 @@ class _QuizSection extends State<QuizSection> {
   FirebaseFirestore db = FirebaseFirestore.instance;
   final responseController = TextEditingController();
   bool flag = true;
-  late int chosenVal=0;
-  late String chosenTile="";
-  late int totalQuizes = 0;
-  late int completedQuizes = 0;
-  late int countCorect=0;
+  late int chosenVal = 0;
+  late String chosenTile = "";
+  late int totalQuizzes = 0;
+  late int completedQuizzes = 0;
+  late int countCorrect = 0;
   late int index = 0;
   late Color a = Colors.indigo.shade300;
   late Color b = Colors.indigo.shade300;
@@ -48,7 +47,7 @@ class _QuizSection extends State<QuizSection> {
         content: "Loading...",
         equation: "Loading...",
         img:
-        "https://firebasestorage.googleapis.com/v0/b/math-16d0d.appspot.com/o/theory.png?alt=media&token=d3cfd46c-c247-4065-803a-00f621328968",
+            "https://firebasestorage.googleapis.com/v0/b/math-16d0d.appspot.com/o/theory.png?alt=media&token=d3cfd46c-c247-4065-803a-00f621328968",
         result: "result",
         solutions: "1,2,3,4")
   ];
@@ -57,17 +56,16 @@ class _QuizSection extends State<QuizSection> {
   void initState() {
     section = widget.section;
     user = FirebaseAuth.instance.currentUser;
-    initQuizes();
+    initQuizzes();
     super.initState();
   }
 
-  initQuizes() async {
+  initQuizzes() async {
     await db
         .collection("Quiz")
         .where("section", isEqualTo: section.id)
         .get()
         .then((querySnapshot) async {
-      print("sections by level completed");
       quizList = [];
       for (var docSnapshot in querySnapshot.docs) {
         quizList.add(QuizModel(
@@ -80,14 +78,13 @@ class _QuizSection extends State<QuizSection> {
             result: docSnapshot["result"],
             solutions: docSnapshot["solutions"]));
       }
-      totalQuizes = quizList.length;
+      totalQuizzes = quizList.length;
     }, onError: (e) => print("Error fetching sections by level"));
     setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    var responseTxt = responseController.text;
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
@@ -96,13 +93,14 @@ class _QuizSection extends State<QuizSection> {
       body: Container(
           decoration: BoxDecoration(
               gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.pink.shade500.withOpacity(0.8),
-                  Colors.teal.shade100.withOpacity(0.8),
-                ],
-              )),
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.pink.shade500.withOpacity(0.8),
+                Colors.teal.shade100.withOpacity(0.8),
+              ],
+            )
+          ),
           child: Container(
               padding: const EdgeInsets.all(10),
               margin: const EdgeInsets.all(30),
@@ -111,255 +109,215 @@ class _QuizSection extends State<QuizSection> {
                 borderRadius: BorderRadius.circular(10.0),
                 color: Colors.white.withOpacity(0.8),
               ),
-              child: Column(children: [buildSingleChildScrollView()]))),
+              child: Column(
+                  children: [
+                    mainQuizView()]
+              )
+          )
+      ),
     );
   }
 
-  SingleChildScrollView buildSingleChildScrollView() {
+  SingleChildScrollView mainQuizView() {
     solutionList = quizList[index].solutions.split(",");
-    // solutionList.shuffle();
+    solutionList.shuffle();
 
     return SingleChildScrollView(
         child: Column(
-          children: [
-            //add question progress bar if time
+          children: [ //add question progress bar if time
             Text(quizList[index].content),
-            Math.tex(quizList[index].equation, mathStyle: MathStyle.display, textScaleFactor: 1.5,),
+            Math.tex(
+              quizList[index].equation,
+              mathStyle: MathStyle.display,
+              textScaleFactor: 1.5,
+            ),
             Container(
-              margin: EdgeInsets.only(top: 20, bottom: 10),
+              margin: const EdgeInsets.only(top: 20, bottom: 10),
               height: 200,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20.0),
+                ),
+              child: Column(
+                children: [
+                  if (quizList[index].img != "")
+                    CachedNetworkImage(
+                      imageUrl: quizList[index].img,
+                      placeholder: (context, url) =>
+                          const CircularProgressIndicator(),
+                    ),
+                  // Image.network(quizList[index].img),
+                ],
               ),
-              child: Image.network(quizList[index].img),
             ),
-            Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    padding:
-                    EdgeInsets.all(MediaQuery.of(context).size.width * 0.03),
-                    margin: EdgeInsets.only(right: 5),
-                    child: ElevatedButton(
-                      style: ButtonStyle(
-                          backgroundColor: MaterialStateProperty.all(a),
-                          fixedSize: MaterialStateProperty.all(
-                              Size(MediaQuery.of(context).size.width * 0.3, 50))),
-                      onPressed: () {
-                        if (tapped != "a") {
-                          a = Colors.indigo;
-                          b = Colors.indigo.shade300;
-                          c = Colors.indigo.shade300;
-                          d = Colors.indigo.shade300;
-                        }
-                        tapped = "a";
-                        setState(() {});
-                      },
-                      child: Row(
-                        children: [Text("A: "), Text(solutionList[0])],
-                      ),
-                    ),
-                  ),
-                  Container(
-                    padding:
-                    EdgeInsets.all(MediaQuery.of(context).size.width * 0.03),
-                    child: ElevatedButton(
-                      style: ButtonStyle(
-                        backgroundColor: MaterialStateProperty.all(b),
-                        fixedSize: MaterialStateProperty.all(
-                            Size(MediaQuery.of(context).size.width * 0.3, 50)),
-                      ),
-                      onPressed: () {
-                        if (tapped != "b") {
-                          a = Colors.indigo.shade300;
-                          b = Colors.indigo;
-                          c = Colors.indigo.shade300;
-                          d = Colors.indigo.shade300;
-                        }
-                        tapped = "b";
-                        setState(() {});
-                      },
-                      child: Row(
-                        children: [Text("B: "), Text(solutionList[1])],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    padding:
-                    EdgeInsets.all(MediaQuery.of(context).size.width * 0.03),
-                    margin: EdgeInsets.only(right: 5),
-                    child: ElevatedButton(
-                      style: ButtonStyle(
-                        backgroundColor: MaterialStateProperty.all(c),
-                        fixedSize: MaterialStateProperty.all(
-                            Size(MediaQuery.of(context).size.width * 0.3, 50)),
-                      ),
-                      onPressed: () {
-                        if (tapped != "c") {
-                          a = Colors.indigo.shade300;
-                          b = Colors.indigo.shade300;
-                          c = Colors.indigo;
-                          d = Colors.indigo.shade300;
-                        }
-                        tapped = "c";
-                        setState(() {});
-                      },
-                      child: Row(
-                        children: [Text("C: "), Text(solutionList[2])],
-                      ),
-                    ),
-                  ),
-                  Container(
-                    padding:
-                    EdgeInsets.all(MediaQuery.of(context).size.width * 0.03),
-                    child: ElevatedButton(
-                      style: ButtonStyle(
-                        fixedSize: MaterialStateProperty.all(
-                            Size(MediaQuery.of(context).size.width * 0.3, 50)),
-                        backgroundColor: MaterialStateProperty.all(d),
-                      ),
-                      onPressed: () {
-                        if (tapped != "d") {
-                          a = Colors.indigo.shade300;
-                          b = Colors.indigo.shade300;
-                          c = Colors.indigo.shade300;
-                          d = Colors.indigo;
-                        }
-                        tapped = "d";
-                        setState(() {});
-                      },
-                      child: Row(
-                        children: [const Text("D: "), Text(solutionList[3])],
-                      ),
-                    ),
-                  ),
-                ],
-              )
-            ]),
-            Container(
-                margin: EdgeInsets.only(top: 30),
-                padding: EdgeInsets.all(8),
-                child: Column(
-                  children: [
-                    flag? buildSubmitButton():buildNextButton()
-                  ],
-                ))
-          ],
-        ));
+            answerView(),
+        Container(
+            margin: const EdgeInsets.only(top: 30),
+            padding: const EdgeInsets.all(8),
+            child: Column(
+              children: [flag ? answerCheck() : goToNextQuestion()],
+            )
+        )
+      ],)
+    );
   }
-  ElevatedButton buildNextButton(){
-    return ElevatedButton(onPressed: ()
-    {
 
-      if (index + 1 < totalQuizes){
-        flag=true;
-        a = Colors.indigo.shade300;
-        b = Colors.indigo.shade300;
-        c = Colors.indigo.shade300;
-        d = Colors.indigo.shade300;
-        tapped="";
-        index+=1;
-        setState(() {});
-      }
-      else{
-        var percent=100*(countCorect/totalQuizes);
-        Navigator.of(context).pop();
-        Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) => QuizSectionResults(
-                    section: section, percent: percent
-                )));
-      }
-    },
-        child: Text("Next"));
+  Column answerView() {
+    return Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+            answerRowTop(),
+            answerRowBottom()
+      ]);
+  }
+
+  Row answerRowBottom() {
+    return Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          answerCell(() {
+            if (tapped != "c") {
+              a = Colors.indigo.shade300;
+              b = Colors.indigo.shade300;
+              c = Colors.indigo;
+              d = Colors.indigo.shade300;
+            }
+            tapped = "c";
+            setState(() {});
+          },"C: "),
+          answerCell(() {
+            if (tapped != "d") {
+              a = Colors.indigo.shade300;
+              b = Colors.indigo.shade300;
+              c = Colors.indigo.shade300;
+              d = Colors.indigo;
+            }
+            tapped = "d";
+            setState(() {});
+          }, "D: ")
+        ],
+      );
   }
 
 
-  ElevatedButton buildSubmitButton() {
+
+  Row answerRowTop() {
+    return Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              answerCell( () {
+                if (tapped != "a") {
+                  a = Colors.indigo;
+                  b = Colors.indigo.shade300;
+                  c = Colors.indigo.shade300;
+                  d = Colors.indigo.shade300;
+                }
+                tapped = "a";
+                setState(() {});
+              }, "A: "),
+              answerCell( () {
+                if (tapped != "b") {
+                  a = Colors.indigo.shade300;
+                  b = Colors.indigo;
+                  c = Colors.indigo.shade300;
+                  d = Colors.indigo.shade300;
+                }
+                tapped = "b";
+                setState(() {});
+              }, "B: ")
+        ],
+      );
+  }
+
+  Container answerCell(function, btnText) {
+    return Container(
+      padding:
+      EdgeInsets.all(MediaQuery.of(context).size.width * 0.03),
+      margin: const EdgeInsets.only(right: 5),
+      child: ElevatedButton(
+        style: ButtonStyle(
+          backgroundColor: MaterialStateProperty.all(c),
+          fixedSize: MaterialStateProperty.all(
+              Size(MediaQuery.of(context).size.width * 0.3, 50)),
+        ),
+        onPressed: function,
+        child: Row(
+          children: [ Text(btnText), Text(solutionList[2])],
+        ),
+      ),
+    );
+  }
+  ElevatedButton goToNextQuestion() {
+    return ElevatedButton(
+        onPressed: () {
+          if (index + 1 < totalQuizzes) {
+            flag = true;
+            a = Colors.indigo.shade300;
+            b = Colors.indigo.shade300;
+            c = Colors.indigo.shade300;
+            d = Colors.indigo.shade300;
+            tapped = "";
+            index += 1;
+            setState(() {});
+          } else {
+            var percent = 100 * (countCorrect / totalQuizzes);
+            Navigator.of(context).pop();
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => QuizSectionResults(
+                        section: section, percent: percent)));
+          }
+        },
+        child: const Text("Next"));
+  }
+
+  ElevatedButton answerCheck() {
     return ElevatedButton(
         onPressed: () {
           flag = false;
-          switch(tapped){
+          switch (tapped) {
             case "a":
-              chosenVal=0;
+              chosenVal = 0;
               break;
             case "b":
-              chosenVal=1;
+              chosenVal = 1;
               break;
             case "c":
-              chosenVal=2;
+              chosenVal = 2;
               break;
             case "d":
-              chosenVal=3;
+              chosenVal = 3;
               break;
           }
-          String correct="";
-          if(solutionList[chosenVal]==quizList[index].result){
-            countCorect+=1;
-            switch(tapped){
-              case "a":
-                a = Colors.lime;
-                break;
-              case "b":
-                b = Colors.lime;
-                break;
-              case "c":
-                c = Colors.lime;
-                break;
-              case "d":
-                d = Colors.lime;
-                break;
-            }
-          }
-          else {
-            switch (tapped) {
-              case "a":
-                a = Colors.pink.shade900;
-                break;
-              case "b":
-                b = Colors.pink.shade900;
-                break;
-              case "c":
-                c = Colors.pink.shade900;
-                break;
-              case "d":
-                d = Colors.pink.shade900;
-                break;
-            }
+          String correct = "";
+          if (solutionList[chosenVal] == quizList[index].result) {
+            countCorrect += 1;
+            switchButton(tapped, Colors.lime);
+          } else {
+            switchButton(tapped,Colors.pink.shade900 );
             for (var i in solutionList) {
               if (i == quizList[index].result) {
                 correct = i;
               }
             }
-            var ind = solutionList.indexOf(correct);
-            switch (ind) {
-              case 0:
-                a = Colors.lime;
-                break;
-              case 1:
-                b = Colors.lime;
-                break;
-              case 2:
-                c = Colors.lime;
-                break;
-              case 3:
-                d = Colors.lime;
-                break;
-            }
           }
           setState(() {});
-
-
-
         },
-        child: Text("Submit answer"));
+        child: const Text("Submit answer"));
+  }
+  switchButton(tapped, color){
+    switch (tapped) {
+      case "a":
+        a = color;
+        break;
+      case "b":
+        b = color;
+        break;
+      case "c":
+        c = color;
+        break;
+      case "d":
+        d = color;
+        break;
+    }
   }
 }
 //text
@@ -367,3 +325,97 @@ class _QuizSection extends State<QuizSection> {
 //image
 //math input
 //camera input
+// var ind = solutionList.indexOf(correct);
+// switch (ind) {
+//   case 0:
+//     a = Colors.lime;
+//     break;
+//   case 1:
+//     b = Colors.lime;
+//     break;
+//   case 2:
+//     c = Colors.lime;
+//     break;
+//   case 3:
+//     d = Colors.lime;
+//     break;
+// }
+// Container(
+//   padding:
+//       EdgeInsets.all(MediaQuery.of(context).size.width * 0.03),
+//   child: ElevatedButton(
+//     style: ButtonStyle(
+//       fixedSize: MaterialStateProperty.all(
+//           Size(MediaQuery.of(context).size.width * 0.3, 50)),
+//       backgroundColor: MaterialStateProperty.all(d),
+//     ),
+//     onPressed: () {
+//       if (tapped != "d") {
+//         a = Colors.indigo.shade300;
+//         b = Colors.indigo.shade300;
+//         c = Colors.indigo.shade300;
+//         d = Colors.indigo;
+//       }
+//       tapped = "d";
+//       setState(() {});
+//     },
+//     child: Row(
+//       children: [const Text("D: "), Text(solutionList[3])],
+//     ),
+//   ),
+// ),
+//Container(
+//   padding:
+//       EdgeInsets.all(MediaQuery.of(context).size.width * 0.03),
+//   margin: const EdgeInsets.only(right: 5),
+//   child: ElevatedButton(
+//     style: ButtonStyle(
+//     backgroundColor: MaterialStateProperty.all(a),
+//     fixedSize: MaterialStateProperty.all(
+//         Size(MediaQuery.of(context).size.width * 0.3, 50)
+//       )
+//     ),
+//     onPressed: () {
+//       if (tapped != "a") {
+//         a = Colors.indigo;
+//         b = Colors.indigo.shade300;
+//         c = Colors.indigo.shade300;
+//         d = Colors.indigo.shade300;
+//       }
+//     tapped = "a";
+//     setState(() {});
+//     },
+//     child: Row(
+//       children: [
+//         const Text("A: "),
+//         Text(solutionList[0])
+//       ],
+//       ),
+//   ),
+// ),
+//Container(
+//       padding:
+//         EdgeInsets.all(MediaQuery.of(context).size.width * 0.03),
+//       child: ElevatedButton(
+//         style: ButtonStyle(
+//         backgroundColor: MaterialStateProperty.all(b),
+//         fixedSize: MaterialStateProperty.all(
+//           Size(MediaQuery.of(context).size.width * 0.3, 50)),
+//         ),
+//       onPressed: () {
+//         if (tapped != "b") {
+//           a = Colors.indigo.shade300;
+//           b = Colors.indigo;
+//           c = Colors.indigo.shade300;
+//           d = Colors.indigo.shade300;
+//         }
+//         tapped = "b";
+//         setState(() {});
+//       },
+//       child: Row(
+//         children: [
+//           const Text("B: "),
+//           Text(solutionList[1])],
+//     ),
+//   ),
+// ),

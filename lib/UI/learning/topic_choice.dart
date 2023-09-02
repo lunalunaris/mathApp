@@ -28,7 +28,7 @@ class _TopicChoice extends State<TopicChoice> {
   late User? user;
 
   late SectionModel section;
-  late FirestoreHandler fs = FirestoreHandler();
+  // late FirestoreHandler fs = FirestoreHandler();
   late String lang;
   late List<TopicModel> topics = [
     TopicModel(id: "temo", name: "Loading...", sectionId: "temp", lang: "en_US")

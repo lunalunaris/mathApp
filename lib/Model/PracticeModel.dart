@@ -69,6 +69,7 @@ class PracticeModel {
       if (img != null) "img": img,
       if (result != null) "result": result,
       if (resultImg != null) "resultImg": resultImg,
+      if (solutions!=null) "solutions": solutions
     };
   }
 }

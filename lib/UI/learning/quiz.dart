@@ -6,6 +6,7 @@ import 'package:flutter_math_fork/flutter_math.dart';
 import 'package:math/Model/QuizModel.dart';
 import 'package:math/Model/TopicModel.dart';
 import 'package:math/UI/learning/quiz_results.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'dart:math';
 
 class Quiz extends StatefulWidget {
@@ -114,7 +115,7 @@ class _Quiz extends State<Quiz> {
   SingleChildScrollView buildSingleChildScrollView() {
     solutionList = quizList[index].solutions.split(",");
     // solutionList.shuffle();
-
+    print(quizList[index].img);
     return SingleChildScrollView(
         child: Column(
       children: [
@@ -127,7 +128,15 @@ class _Quiz extends State<Quiz> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20.0),
           ),
-          child: Image.network(quizList[index].img),
+          child:Column(
+            children: [
+              if (quizList[index].img!= "None")CachedNetworkImage(
+            imageUrl: quizList[index].img,
+            placeholder: (context,url)=> const CircularProgressIndicator(),
+          )
+            ],
+          )
+          // Image.network(quizList[index].img),
         ),
         Column(mainAxisAlignment: MainAxisAlignment.center, children: [
           Row(

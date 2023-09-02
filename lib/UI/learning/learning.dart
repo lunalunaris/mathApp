@@ -27,7 +27,7 @@ class _Learning extends State<Learning> {
 
   late String level;
   late String lang;
-  late FirestoreHandler fs = FirestoreHandler();
+  // late FirestoreHandler fs = FirestoreHandler();
   late List<SectionModel> sections = [
     SectionModel(id: "temo", name: "Loading...", level: "0", lang: "en_US")
   ];

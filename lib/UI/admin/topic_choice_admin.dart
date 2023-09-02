@@ -4,6 +4,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:math/Database/FireStoreHandler.dart';
 import 'package:math/Model/SectionModel.dart';
+import 'package:math/UI/admin/practice_upload.dart';
+import 'package:math/UI/admin/quiz_upload.dart';
+import 'package:math/UI/admin/theory_upload.dart';
 import 'package:math/UI/admin/upload.dart';
 import 'package:math/UI/learning/topic.dart';
 import 'dart:developer' as developer;
@@ -29,7 +32,7 @@ class _TopicChoiceAdmin extends State<TopicChoiceAdmin> {
   late String lang;
   late String type;
   late SectionModel section;
-  late FirestoreHandler fs = FirestoreHandler();
+  // late FirestoreHandler fs = FirestoreHandler();
 
   late List<TopicModel> topics = [
     TopicModel(id: "temo", name: "Loading...", sectionId: "temp", lang: "en_US")
@@ -66,12 +69,28 @@ class _TopicChoiceAdmin extends State<TopicChoiceAdmin> {
     setState(() {});
   }
   next(TopicModel topicModel){
-
-    Navigator.push(
-        context,
-        MaterialPageRoute(
-            builder: (context) =>
-                Upload( type: type, container: topicModel.id,)));
+    if(type=="theory")
+      {
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) =>
+                    UploadTheory( container: topicModel.id,)));
+      }
+    else if(type=="practice"){
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) =>
+                  UploadPractice( container: topicModel.id,)));
+    }
+    else {
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) =>
+                  UploadQuiz(type: type, container: topicModel.id,)));
+    }
   }
 
   @override
@@ -79,7 +98,7 @@ class _TopicChoiceAdmin extends State<TopicChoiceAdmin> {
     return Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-          title: const Text("Learning"),
+          title: const Text("Topic choice"),
         ),
         body: Container(
           decoration: BoxDecoration(

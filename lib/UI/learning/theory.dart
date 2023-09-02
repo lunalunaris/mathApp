@@ -1,4 +1,5 @@
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
@@ -73,7 +74,15 @@ List<TheoryModel> theory = [];
         if(theory.isNotEmpty)
           for(var i in theory)
             Center(
-              child: Image.network(i.img),
+              child: Column(
+                children: [
+                  if (i.img!= "None")CachedNetworkImage(
+                    imageUrl: i.img,
+                    placeholder: (context,url)=> const CircularProgressIndicator(),
+                  )
+                ],
+              )
+              //Image.network(i.img),
             ),
 
       ],
