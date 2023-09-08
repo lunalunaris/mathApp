@@ -1,11 +1,18 @@
+import 'dart:developer' as developer;
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:math/Database/sqliteHandler.dart';
+import 'package:math/Model/QuizModel.dart';
 import 'package:math/Model/SectionModel.dart';
 import 'package:math/UI/learning/quiz_section.dart';
 import 'package:math/UI/learning/topic_choice.dart';
 import 'package:math/generated/l10n.dart';
-import 'dart:developer' as developer;
+import 'package:sqflite/sqflite.dart';
+
+import '../../Model/TopicModel.dart';
 import '../settings/settings.dart';
 
 class Learning extends StatefulWidget {
@@ -20,10 +27,14 @@ class Learning extends StatefulWidget {
 class _Learning extends State<Learning> {
   FirebaseFirestore db = FirebaseFirestore.instance;
   late User? user;
-
+  List<QuizModel> quizList = [];
   late String level;
   late String lang;
-  late List<SectionModel> sections = [
+  String userRole = "";
+  SqliteHandler sql = SqliteHandler();
+  bool connected = true;
+  late List<TopicModel> topicList = [];
+  late List<SectionModel> sectionList = [
     SectionModel(id: "temp", name: "Loading...", level: "0", lang: "en")
   ];
   late List<String> completedSections = [];
@@ -32,15 +43,49 @@ class _Learning extends State<Learning> {
   void initState() {
     user = FirebaseAuth.instance.currentUser;
     // lang = Platform.localeName;
+
+    initConnect();
     level = "0";
     // initLevel();
     super.initState();
   }
 
+  initConnect() async {
+    final connectivityResult = await (Connectivity().checkConnectivity());
+    if (connectivityResult == ConnectivityResult.none ||
+        connectivityResult == ConnectivityResult.bluetooth) {
+      connected = false;
+    }
+  }
+
+  initRole() async {
+    await db
+        .collection("UserRole")
+        .doc(user?.uid)
+        .get()
+        .then((querySnapshot) async {
+      userRole = querySnapshot["role"];
+      setState(() {});
+    });
+  }
+
   @override
-  void didChangeDependencies() {
+  Future<void> didChangeDependencies() async {
     lang = Localizations.localeOf(context).languageCode.toString();
-    initLevel();
+
+    await initConnect();
+    if (connected) {
+      initLevel();
+      initRole();
+    } else {
+      try {
+        level = await sql.getCurrentLevel();
+        sectionList = [];
+        sectionList = await sql.getSectionsByLevel(level);
+      } on DatabaseException catch (e) {
+        print(e.toString());
+      }
+    }
     setState(() {});
     super.didChangeDependencies();
   }
@@ -57,9 +102,9 @@ class _Learning extends State<Learning> {
           .get()
           .then((querySnapshot) async {
         print("sections by level completed");
-        sections = [];
+        sectionList = [];
         for (var docSnapshot in querySnapshot.docs) {
-          sections.add(SectionModel(
+          sectionList.add(SectionModel(
               id: docSnapshot.id,
               name: docSnapshot.data()["name"],
               level: docSnapshot.data()["level"],
@@ -76,6 +121,141 @@ class _Learning extends State<Learning> {
         });
       }, onError: (e) => print("Error fetching completed quiz sections"));
     }, onError: (e) => print("Error fetching sections by level"));
+    setState(() {});
+  }
+
+  Future<void> clearPractice(topic) async {
+    var collection = FirebaseFirestore.instance
+        .collection('Practice')
+        .where("topicId", isEqualTo: topic.id);
+    var snapshots = await collection.get();
+    for (var doc in snapshots.docs) {
+      await doc.reference.delete();
+    }
+  }
+
+  Future<void> clearQuiz(topic) async {
+    var collection = FirebaseFirestore.instance
+        .collection('Quiz')
+        .where("topicId", isEqualTo: topic.id);
+    var snapshots = await collection.get();
+    for (var doc in snapshots.docs) {
+      await doc.reference.delete();
+    }
+  }
+
+  Future<void> clearTheory(topic) async {
+    var collection = FirebaseFirestore.instance
+        .collection('Theory')
+        .where("topicId", isEqualTo: topic.id);
+    var snapshots = await collection.get();
+    for (var doc in snapshots.docs) {
+      await doc.reference.delete();
+    }
+  }
+
+  Future<void> clearSectionQuiz(index) async {
+    var collection = FirebaseFirestore.instance
+        .collection('Quiz')
+        .where("section", isEqualTo: index.id);
+    var snapshots = await collection.get();
+    for (var doc in snapshots.docs) {
+      await doc.reference.delete();
+    }
+  }
+
+  deleteTopic(index) {
+    try {
+      clearPractice(index);
+      clearQuiz(index);
+      clearTheory(index);
+      setState(() {});
+      final collection = FirebaseFirestore.instance.collection('Topic');
+      collection
+          .doc(index.id) // <-- Doc ID to be deleted.
+          .delete() // <-- Delete
+          .then((_) => {
+                ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(S.of(context).deletedSuccessfully)))
+              })
+          .catchError((e) => {
+                ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(S.of(context).deleteFailed)))
+              });
+    } catch (e) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(S.of(context).deleteFailed)));
+    }
+  }
+
+  initTopicList(SectionModel index) async {
+    await db
+        .collection("Topic")
+        .where("section", isEqualTo: index.id)
+        .where("lang", isEqualTo: lang)
+        .get()
+        .then((querySnapshot) async {
+      print("topics by section completed");
+      topicList = [];
+      for (var docSnapshot in querySnapshot.docs) {
+        topicList.add(TopicModel(
+            id: docSnapshot.id,
+            name: docSnapshot.data()["name"],
+            lang: docSnapshot.data()["lang"],
+            sectionId: docSnapshot.data()["section"]));
+      }
+    }, onError: (e) => print("Error fetching topics by section"));
+    setState(() {});
+  }
+
+  initQuizzes(index) async {
+    await db
+        .collection("Quiz")
+        .where("section", isEqualTo: index.id)
+        .get()
+        .then((querySnapshot) async {
+      quizList = [];
+      for (var docSnapshot in querySnapshot.docs) {
+        quizList.add(QuizModel(
+            id: docSnapshot.id,
+            topicId: docSnapshot["topicId"],
+            section: docSnapshot["section"],
+            content: docSnapshot["content"],
+            equation: docSnapshot["equation"],
+            img: docSnapshot["img"],
+            result: docSnapshot["result"],
+            solutions: docSnapshot["solutions"]));
+      }
+    }, onError: (e) => print("Error fetching quizzes by section"));
+    setState(() {});
+  }
+
+  deleteSection(index) async {
+    await initQuizzes(index);
+    await initTopicList(index);
+    for (var topic in topicList) {
+      await deleteTopic(topic);
+    }
+   await clearSectionQuiz(index);
+    try {
+      final collection = FirebaseFirestore.instance.collection('Section');
+      collection
+          .doc(index.id) // <-- Doc ID to be deleted.
+          .delete() // <-- Delete
+          .then((_) => {
+                ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Deleted section")))
+              })
+          .catchError((e) => {
+                ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(S.of(context).deleteFailed)))
+              });
+    } catch (e) {
+      if(!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(S.of(context).deleteFailed)));
+    }
+    sectionList.remove(index);
     setState(() {});
   }
 
@@ -122,10 +302,17 @@ class _Learning extends State<Learning> {
                   endIndent: 40,
                   color: Colors.teal,
                 ),
-                for (var i in sections)
+                for (var i in sectionList)
                   Column(children: [
                     ListTile(
-                      leading: const Icon(Icons.star_border),
+                      leading: userRole == "admin"
+                          ? IconButton(
+                              onPressed: () {
+                                deleteSection(i);
+                                setState(() {});
+                              },
+                              icon: Icon(Icons.delete_forever_rounded))
+                          : const Icon(Icons.star_border),
                       title: TextButton(
                           onPressed: () {
                             Navigator.push(

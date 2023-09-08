@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import '../../generated/l10n.dart';
 import 'package:math/UI/admin/section_choice_admin.dart';
@@ -53,6 +54,7 @@ class _AdminInitState extends State<AdminInit> {
   String typeDropdown = "";
   String classDropdown = "";
   String langDropdown = "";
+  bool connected = true;
   late Locale locale;
   bool flag = false;
   TextEditingController controller = TextEditingController();
@@ -75,18 +77,17 @@ class _AdminInitState extends State<AdminInit> {
   }
 
   Future<void> addSection() async {
-    try{
+    try {
       db.collection("Section").add({
         "lang": languageList.values.elementAt(langIndex),
         "name": sectionController.text,
         "level": levelList.values.elementAt(levelIndex)
       });
       ScaffoldMessenger.of(context).showSnackBar(
-           SnackBar(content: Text(S.of(context).sectionSubmittedSuccessfully)));
-    }
-    catch(e){
+          SnackBar(content: Text(S.of(context).sectionSubmittedSuccessfully)));
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-           SnackBar(content: Text(S.of(context).submissionFailed)));
+          SnackBar(content: Text(S.of(context).submissionFailed)));
     }
 
     sectionController.text = "";
@@ -95,8 +96,17 @@ class _AdminInitState extends State<AdminInit> {
   @override
   void initState() {
     user = FirebaseAuth.instance.currentUser;
+    initConnect();
     initTables();
     super.initState();
+  }
+
+  initConnect() async {
+    final connectivityResult = await (Connectivity().checkConnectivity());
+    if (connectivityResult == ConnectivityResult.none ||
+        connectivityResult == ConnectivityResult.bluetooth) {
+      connected = false;
+    }
   }
 
   initTables() async {}
@@ -104,7 +114,7 @@ class _AdminInitState extends State<AdminInit> {
   @override
   void didChangeDependencies() {
     locale = Localizations.localeOf(context);
-    if (locale.languageCode.toString()=="pl") {
+    if (locale.languageCode.toString() == "pl") {
       typeList = typeListPl;
       levelList = levelListPl;
       languageList = languageListPl;
@@ -215,8 +225,17 @@ class _AdminInitState extends State<AdminInit> {
               ],
             )),
         ElevatedButton(
+            style: ButtonStyle(
+                backgroundColor: connected == true
+                    ? MaterialStateProperty.all(Colors.pink)
+                    : MaterialStateProperty.all(Colors.blueGrey)),
             onPressed: () {
-              next(context);
+              if (connected) {
+                next(context);
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(S.of(context).noInternetConnection)));
+              }
             },
             child: Text(S.of(context).next))
       ],
@@ -254,17 +273,19 @@ class _AdminInitState extends State<AdminInit> {
                               vertical: 10, horizontal: 20),
                           border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10.0)),
-                          hintText: "Section name"),
+                          hintText: S.of(context).sectionName),
                     ),
                   ),
                   ElevatedButton(
                       onPressed: () {
-                        addSection();
-                        Navigator.of(context).pop();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("Section submitted")));
+                        if (connected) {
+                          addSection();
+                          Navigator.of(context).pop();
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                              content: Text(S.of(context).sectionSubmitted)));
+                        }
                       },
-                      child: const Text("Submit"))
+                      child: Text(S.of(context).submit))
                 ],
               ),
             ),

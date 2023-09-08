@@ -67,5 +67,22 @@
   "submitAnswer": "Submit answer",
   "correct": "correct",
   "incorrect": "incorrect",
-  "questionsCorrect": "Questions correct"
+  "questionsCorrect": "Questions correct",
+  "downloaded": "Downloaded",
+  "download": "Download",
+  "errorCleaningProgress": "Error cleaning progress",
+  "progressCleared": "Progress cleared",
+  "clearProgress": "Clear progress",
+  "logOut": "Log out",
+  "adminPanel": "Admin panel",
+  "changeLevel": "Change level",
+  "settings": "Settings",
+  "noInternetConnection": "No internet connection",
+  "sectionSubmitted": "Section submitted",
+  "sectionName": "Section name",
+  "noQuizzesAddedForThisTopic": "No quizzes added for this topic",
+  "noTheorySubmittedForThisTopic": "No theory submitted for this topic",
+  "deletedSuccessfully": "Deleted successfully",
+  "deleteFailed": "Delete failed",
+  "delete": "Delete"
 }

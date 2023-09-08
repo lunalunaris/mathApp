@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -17,8 +18,7 @@ class UploadTheory extends StatefulWidget {
   @override
   State<UploadTheory> createState() => _UploadTheory();
 
-  UploadTheory({Key? key, required this.container})
-      : super(key: key);
+  UploadTheory({Key? key, required this.container}) : super(key: key);
 }
 
 class _UploadTheory extends State<UploadTheory> {
@@ -30,13 +30,12 @@ class _UploadTheory extends State<UploadTheory> {
       firebase_storage.FirebaseStorage.instance;
   List<File> selectedTheoryImg = [];
   final ImagePicker imagePicker = ImagePicker();
-
-
-
+  bool connected = true;
 
   @override
   void initState() {
     container = widget.container;
+    initConnect();
     user = FirebaseAuth.instance.currentUser;
     super.initState();
   }
@@ -44,7 +43,14 @@ class _UploadTheory extends State<UploadTheory> {
   Future<void> addTheory(TheoryModel theory) async {
     db.collection("Theory").add(theory.toFirestore()).then((documentSnapshot) =>
         print("Added Data with ID: ${documentSnapshot.id}"));
+  }
 
+  initConnect() async {
+    final connectivityResult = await (Connectivity().checkConnectivity());
+    if (connectivityResult == ConnectivityResult.none ||
+        connectivityResult == ConnectivityResult.bluetooth) {
+      connected = false;
+    }
   }
 
   @override
@@ -53,18 +59,18 @@ class _UploadTheory extends State<UploadTheory> {
       resizeToAvoidBottomInset: false,
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title:  Text(S.of(context).theory),
+        title: Text(S.of(context).theory),
       ),
       body: Container(
           decoration: BoxDecoration(
               gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.pink.shade500.withOpacity(0.8),
-                  Colors.teal.shade100.withOpacity(0.8),
-                ],
-              )),
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.pink.shade500.withOpacity(0.8),
+              Colors.teal.shade100.withOpacity(0.8),
+            ],
+          )),
           child: Container(
               padding: const EdgeInsets.all(10),
               margin: const EdgeInsets.all(30),
@@ -73,83 +79,73 @@ class _UploadTheory extends State<UploadTheory> {
                 borderRadius: BorderRadius.circular(10.0),
                 color: Colors.white.withOpacity(0.8),
               ),
-              child: Column(children: [
-                  buildTheoryView(context)
-              ]))),
+              child: Column(children: [buildTheoryView(context)]))),
     );
   }
 
-
-
-
-
-  Future getTheoryPhotos(BuildContext context) async{
-    final files = await imagePicker.pickMultiImage(
-        maxWidth: 500,
-        maxHeight: 500
-    );
-    List<XFile> filePick= files;
-    if(filePick.isNotEmpty){
-      for (var i in filePick){
+  Future getTheoryPhotos(BuildContext context) async {
+    final files =
+        await imagePicker.pickMultiImage(maxWidth: 500, maxHeight: 500);
+    List<XFile> filePick = files;
+    if (filePick.isNotEmpty) {
+      for (var i in filePick) {
         selectedTheoryImg.add(File(i.path));
       }
-      setState(() {
-      });
+      setState(() {});
       // submitTheory();
-    }
-    else {
+    } else {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Nothing is selected')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Nothing is selected')));
     }
   }
+
   submitTheory(BuildContext context) async {
-    for(var i in selectedTheoryImg){
+    for (var i in selectedTheoryImg) {
       final name = basename(i.path);
       final dest = 'theory/$name';
       try {
         var snapshot = await storage.ref(dest).putFile(i);
         var downloadUrl = await snapshot.ref.getDownloadURL();
         TheoryModel theory =
-        TheoryModel(id: "none", topicId: container, img: downloadUrl);
+            TheoryModel(id: "none", topicId: container, img: downloadUrl);
         addTheory(theory);
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-             SnackBar(content: Text(S.of(context).theorySubmittedSuccessfully)));
+            SnackBar(content: Text(S.of(context).theorySubmittedSuccessfully)));
       } catch (e) {
         print(e.toString());
         ScaffoldMessenger.of(context).showSnackBar(
-             SnackBar(content: Text(S.of(context).submissionFailed)));
+            SnackBar(content: Text(S.of(context).submissionFailed)));
       }
     }
   }
+
   Future<void> getTheoryFromCamera(BuildContext context) async {
-    final files = await imagePicker.pickImage(source: ImageSource.camera,
-        maxWidth: 500,
-        maxHeight: 500
-    );
-    XFile? filePick= files;
-    if(filePick !=null){
+    final files = await imagePicker.pickImage(
+        source: ImageSource.camera, maxWidth: 500, maxHeight: 500);
+    XFile? filePick = files;
+    if (filePick != null) {
       selectedTheoryImg.add(File(filePick.path));
-      setState(() {
-      });
-    }
-    else {
+      setState(() {});
+    } else {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-           SnackBar(content: Text(S.of(context).nothingIsSelected)));
+          SnackBar(content: Text(S.of(context).nothingIsSelected)));
     }
   }
+
   Expanded buildTheoryView(BuildContext context) {
     return Expanded(
       child: SingleChildScrollView(
-        child: Column(
+          child: Column(
         children: [
           Padding(
             padding: const EdgeInsets.all(8.0),
-            child: Text(S.of(context).uploadTheoryImages, style: const TextStyle(
-              fontSize: 20,fontWeight: FontWeight.bold
-            ),),
+            child: Text(
+              S.of(context).uploadTheoryImages,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
           ),
           Padding(
             padding: const EdgeInsets.all(15.0),
@@ -158,7 +154,7 @@ class _UploadTheory extends State<UploadTheory> {
                 getTheoryPhotos(context);
                 setState(() {});
               },
-              label:  Text(S.of(context).fromGallery),
+              label: Text(S.of(context).fromGallery),
               backgroundColor: Colors.pink.shade800,
               icon: const Icon(Icons.add_a_photo_rounded),
             ),
@@ -170,43 +166,43 @@ class _UploadTheory extends State<UploadTheory> {
                 getTheoryFromCamera(context);
                 setState(() {});
               },
-              label:  Text(S.of(context).fromCamera),
+              label: Text(S.of(context).fromCamera),
               backgroundColor: Colors.pink.shade800,
               icon: const Icon(Icons.add_a_photo_rounded),
             ),
           ),
           ElevatedButton(
+              style: ButtonStyle(
+                  backgroundColor: connected == true
+                      ? MaterialStateProperty.all(Colors.pink)
+                      : MaterialStateProperty.all(Colors.blueGrey)),
               onPressed: () {
-                if(selectedTheoryImg.isNotEmpty){
-                  submitTheory(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                       SnackBar(content: Text(S.of(context).filesSubmitted)));
-                  Navigator.pop(context);
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => AdminInit(
-                          )));
-                }
-                else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                       SnackBar(content: Text(S.of(context).nothingIsSelected)));
+                if (connected) {
+                  if (selectedTheoryImg.isNotEmpty) {
+                    submitTheory(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(S.of(context).filesSubmitted)));
+                    Navigator.pop(context);
+                    Navigator.push(context,
+                        MaterialPageRoute(builder: (context) => AdminInit()));
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text(S.of(context).nothingIsSelected)));
+                  }
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text(S.of(context).noInternetConnection)));
                 }
               },
-              child:  Text(S.of(context).submit)),
+              child: Text(S.of(context).submit)),
           Column(
             children: [
               for (var i in selectedTheoryImg)
-            SizedBox(width: 200, height: 100,child: Image.file(i)),
-            ],),
-
+                SizedBox(width: 200, height: 100, child: Image.file(i)),
+            ],
+          ),
         ],
       )),
     );
   }
-
-
-
-
 }
-

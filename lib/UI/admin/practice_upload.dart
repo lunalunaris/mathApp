@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -46,13 +47,13 @@ class _UploadPractice extends State<UploadPractice> {
   File? solutionImg;
   File? taskImg;
   File? tempFile;
-
+  bool connected = true;
   final ImagePicker imagePicker = ImagePicker();
 
   @override
   void initState() {
     container = widget.container;
-
+    initConnect();
     user = FirebaseAuth.instance.currentUser;
     super.initState();
   }
@@ -63,13 +64,21 @@ class _UploadPractice extends State<UploadPractice> {
             print("Added Data with ID: ${documentSnapshot.id}"));
   }
 
+  initConnect() async {
+    final connectivityResult = await (Connectivity().checkConnectivity());
+    if (connectivityResult == ConnectivityResult.none ||
+        connectivityResult == ConnectivityResult.bluetooth) {
+      connected = false;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: true,
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title:  Text(S.of(context).practice),
+        title: Text(S.of(context).practice),
       ),
       body: Container(
           decoration: BoxDecoration(
@@ -256,15 +265,24 @@ class _UploadPractice extends State<UploadPractice> {
           ),
           photoBuilder(context),
           ElevatedButton(
+              style: ButtonStyle(
+                  backgroundColor: connected == true
+                      ? MaterialStateProperty.all(Colors.pink)
+                      : MaterialStateProperty.all(Colors.blueGrey)),
               onPressed: () {
-                submitPractice(context);
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => UploadPractice(
-                              container: container,
-                            )));
-                Navigator.pop(context);
+                if (connected) {
+                  submitPractice(context);
+                  Navigator.pop(context);
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => UploadPractice(
+                                container: container,
+                              )));
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text(S.of(context).noInternetConnection)));
+                }
               },
               child: Text(S.of(context).submit))
         ],
@@ -281,6 +299,7 @@ class _UploadPractice extends State<UploadPractice> {
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               FloatingActionButton.extended(
+                heroTag: "btn1",
                 onPressed: () {
                   showCameraDialog(context);
                   taskImg = tempFile;
@@ -291,6 +310,7 @@ class _UploadPractice extends State<UploadPractice> {
                 icon: const Icon(Icons.add_a_photo_rounded),
               ),
               FloatingActionButton.extended(
+                heroTag: "btn",
                 onPressed: () {
                   showCameraDialog(context);
                   solutionImg = tempFile;

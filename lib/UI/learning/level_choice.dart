@@ -1,8 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:math/UI/learning/learning.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import '../../Database/sqliteHandler.dart';
 import '../../generated/l10n.dart';
 
 class LevelChoice extends StatefulWidget {
@@ -17,6 +19,7 @@ class LevelChoice extends StatefulWidget {
 class _LevelChoiceState extends State<LevelChoice> {
   late User? user;
   late Locale locale;
+  bool connected=true;
   FirebaseFirestore db = FirebaseFirestore.instance;
   var levelList = {
     "Primary school 1-3": "0",
@@ -32,9 +35,13 @@ class _LevelChoiceState extends State<LevelChoice> {
     "Szkoła średnia poziom podstawowy": "3",
     "Skoła średnia poziom rozszerzony": "4"
   };
+  SqliteHandler sql=SqliteHandler();
+
   selectLevel(String level) {
-    print(user?.uid);
-    addLevel(levelList[level]!);
+    addtoDb(levelList[level]!);
+    if(connected) {
+      addLevel(levelList[level]!);
+    }
     Navigator.push(
         context, MaterialPageRoute(builder: (context) => const Learning()));
   }
@@ -42,11 +49,23 @@ class _LevelChoiceState extends State<LevelChoice> {
   Future<void> addLevel(String level) async {
     db.collection("UserLevel").doc(user?.uid).set({"level": level});
   }
+  addtoDb(String level)async{
+    await sql.insertLevel(level);
+  }
 
   @override
   void initState() {
     user = FirebaseAuth.instance.currentUser;
+    initConnect();
     super.initState();
+  }
+
+  initConnect() async {
+    final connectivityResult = await (Connectivity().checkConnectivity());
+    if (connectivityResult == ConnectivityResult.none ||
+        connectivityResult == ConnectivityResult.bluetooth) {
+      connected = false;
+    }
   }
   @override
   void didChangeDependencies() {

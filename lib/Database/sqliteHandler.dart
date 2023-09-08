@@ -16,14 +16,13 @@ class SqliteHandler {
       version: 1,
       onCreate: (Database db, int version) async {
         await db.execute(
-            'CREATE TABLE Practice(id TEXT PRIMARY KEY, topicId TEXT, content TEXT, img TEXT, '
-                ' equation TEXT, resultImg TEXT, result TEXT, solutions TEXT);'
-            'CREATE TABLE Theory(id TEXT PRIMARY KEY, img TEXT);'
-            'CREATE TABLE Quiz(id TEXT PRIMARY KEY, content TEXT, equation TEXT, img TEXT, result TEXT,'
-                'SECTION TEXT, solutions TEXT,topicId TEXT);'
-            'CREATE TABLE topics(id TEXT PRIMARY KEY, name TEXT, section TEXT, completed BOOLEAN);'
-            'CREATE TABLE sections(id TEXT PRIMARY KEY, name TEXT, level TEXT, completed BOOLEAN);'
-            'CREATE TABLE level(id TEXT PRIMARY KEY, name TEXT);');
+            'CREATE TABLE Practice(id TEXT PRIMARY KEY, topicId TEXT, content TEXT, img TEXT, equation TEXT, resultImg TEXT, result TEXT, solutions TEXT);');
+        await db.execute('CREATE TABLE Theory(id TEXT PRIMARY KEY, img TEXT, topicId TEXT);');
+        await db.execute('CREATE TABLE Quiz(id TEXT PRIMARY KEY, content TEXT, equation TEXT, img TEXT, result TEXT, section TEXT, solutions TEXT,topicId TEXT);');
+        await db.execute('CREATE TABLE Topic(id TEXT PRIMARY KEY, name TEXT, section TEXT, lang TEXT);');
+        await db.execute('CREATE TABLE Section(id TEXT PRIMARY KEY, name TEXT, level TEXT, lang TEXT);');
+        await db.execute('CREATE TABLE Level(id TEXT PRIMARY KEY);');
+
       },
     );
   }
@@ -44,6 +43,12 @@ class SqliteHandler {
     await db.query("Quiz", where: "topicId = ?", whereArgs: [topic]);
     return queryResult.map((e) => QuizModel.fromMap(e)).toList();
   }
+  Future<List<QuizModel>> getQuizModelsBySection(String section) async {
+    final Database db = await initializeDB();
+    final List<Map<String, Object?>> queryResult =
+    await db.query("Quiz", where: "section = ?", whereArgs: [section]);
+    return queryResult.map((e) => QuizModel.fromMap(e)).toList();
+  }
   Future<List<TheoryModel>> getTheoryModelsByTopic(String topic) async {
     final Database db = await initializeDB();
     final List<Map<String, Object?>> queryResult =
@@ -51,23 +56,24 @@ class SqliteHandler {
     return queryResult.map((e) => TheoryModel.fromMap(e)).toList();
   }
 
-  Future<String?> getCurrentLevel() async {
+  Future<String> getCurrentLevel() async {
     final Database db = await initializeDB();
-    var response = await db.query("level");
-    return response.isNotEmpty ? response.first.toString() : null;
+    var response = await db.query("Level");
+    // return response.isNotEmpty ? response.first.toString() : null;
+    return response.first.values.first.toString();
   }
 
   Future<List<SectionModel>> getSectionsByLevel(String level) async {
     final Database db = await initializeDB();
     final List<Map<String, Object?>> queryResult =
-        await db.query("sections", where: "level = ?", whereArgs: [level]);
+        await db.query("Section", where: "level = ?", whereArgs: [level]);
     return queryResult.map((e) => SectionModel.fromDbMap(e)).toList();
   }
 
   Future<List<TopicModel>> getTopicsBySection(String sectionId) async {
     final Database db = await initializeDB();
     final List<Map<String, Object?>> queryResult = await db
-        .query("topics", where: "section = ?", whereArgs: [sectionId]);
+        .query("Topic", where: "section = ?", whereArgs: [sectionId]);
     return queryResult.map((e) => TopicModel.fromDbMap(e)).toList();
   }
 
@@ -110,7 +116,7 @@ class SqliteHandler {
     final Database db = await initializeDB();
     int result = 0;
     result = await db.insert(
-      'topics',
+      'Topic',
       topic.toMap(),
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
@@ -120,7 +126,7 @@ class SqliteHandler {
     final Database db = await initializeDB();
     int result = 0;
     result = await db.insert(
-      'sections',
+      'Section',
       section.toMap(),
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
@@ -130,8 +136,8 @@ class SqliteHandler {
     final Database db = await initializeDB();
     int result = 0;
     result = await db.insert(
-      'levels',
-      {"name":level},
+      'Level',
+      {"id":level},
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
@@ -164,14 +170,40 @@ Future<bool> isPracticeSaved(String id) async {
     var response = await db.query("Quiz", where: "topicId = ?", whereArgs: [topicId]);
     return response.isNotEmpty;
   }
+  Future<bool> isSectionQuizSaved(String section) async {
+    final Database db = await initializeDB();
+    var response = await db.query("Quiz", where: "section = ?", whereArgs: [section]);
+    return response.isNotEmpty;
+  }
   Future<bool> isTheorySaved(String topicId) async {
     final Database db = await initializeDB();
     var response = await db.query("Theory", where: "topicId = ?", whereArgs: [topicId]);
     return response.isNotEmpty;
   }
+  Future<bool> arePracticesInTopic(String topicId)async{
+    final Database db = await initializeDB();
+    var response = await db.query("Practice", where: "topicId = ?", whereArgs: [topicId]);
+    return response.isNotEmpty;
+  }
 
+  Future<bool> areTopicsInSection(String section)async{
+    final Database db = await initializeDB();
+    var response = await db.query("Topic", where: "section = ?", whereArgs: [section]);
+    return response.isNotEmpty;
+  }
 
-  // Future<List> getCompletedAll() async {
+  Future<bool> isSectionSaved(String section)async{
+    final Database db = await initializeDB();
+    var response = await db.query("Section", where: "id = ?", whereArgs: [section]);
+    return response.isNotEmpty;
+  }
+  Future<bool> isTopicSaved(String topic)async{
+    final Database db = await initializeDB();
+    var response = await db.query("Topic", where: "id = ?", whereArgs: [topic]);
+    return response.isNotEmpty;
+  }
+
+// Future<List> getCompletedAll() async {
   //   final Database db = await initializeDB();
   //   List<Map> tasks = await db.query("completed");
   //   return tasks;
@@ -217,7 +249,7 @@ Future<bool> isPracticeSaved(String id) async {
 // Future<List<PracticeModel>> getPracticeModelByTopicId(String id) async {
 //   final Database db = await initializeDB();
 //   final List<Map<String, Object?>> queryResult = await db.rawQuery(
-//       'select * from savedPracticeModel from join topics on topics.id = savedPracticeModel.topicId where topics.id = "${id}"');
+//       'select * from savedPracticeModel from join Topic on Topic.id = savedPracticeModel.topicId where topics.id = "${id}"');
 //   return queryResult.map((e) => PracticeModel.fromMap(e)).toList();
 // }
 

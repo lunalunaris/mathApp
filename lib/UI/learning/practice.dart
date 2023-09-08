@@ -1,29 +1,53 @@
+import 'dart:convert';
+import 'dart:developer';
+import 'dart:io';
+import 'dart:typed_data';
+import 'dart:ui';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_math_fork/flutter_math.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:math/Database/sqliteHandler.dart';
 import 'package:math/Model/PracticeModel.dart';
+import 'package:math/Model/SectionModel.dart';
 import 'package:math/Model/TopicModel.dart';
 import 'package:math/generated/l10n.dart';
 import 'package:math_keyboard/math_keyboard.dart';
-import 'package:flutter_math_fork/flutter_math.dart';
+import 'package:sqflite/sqflite.dart';
+import 'package:image/image.dart' as Imagi;
 
+import '../../Algorithm/PhotoDecoder.dart';
 class Practice extends StatefulWidget {
   late TopicModel topic;
+  late SectionModel section;
 
   @override
   State<Practice> createState() => _Practice();
 
-  Practice({Key? key, required this.topic}) : super(key: key);
+  Practice({Key? key, required this.topic, required this.section})
+      : super(key: key);
 }
+
+//TODO remove button for all for admin user
 
 class _Practice extends State<Practice> {
   late User? user;
   late TopicModel topic;
+  late SectionModel section;
   FirebaseFirestore db = FirebaseFirestore.instance;
   final responseController = TextEditingController();
+  final ImagePicker imagePicker = ImagePicker();
+  SqliteHandler sql = SqliteHandler();
   bool flag = true;
+  bool connected = true;
+  bool downloaded = false;
   bool correct = false;
+  bool enabled = false;
+  String userRole="";
   int index = 0;
   List<PracticeModel> practiceList = [
     PracticeModel(
@@ -44,18 +68,119 @@ class _Practice extends State<Practice> {
   @override
   void initState() {
     topic = widget.topic;
+    section = widget.section;
     user = FirebaseAuth.instance.currentUser;
-    initPractice();
+    initConnect();
+    if (connected) {
+      initPractice();
+      initRole();
+    } else {
+      initFromDb();
+    }
+    isDownloaded();
     super.initState();
   }
 
-  initPractice() async {
+  isDownloaded() async {
+    downloaded = await sql.isPracticeSaved(practiceList[index].id);
+    setState(() {});
+  }
+
+  initConnect() async {
+    final connectivityResult = await (Connectivity().checkConnectivity());
+    if (connectivityResult == ConnectivityResult.none ||
+        connectivityResult == ConnectivityResult.bluetooth) {
+      connected = false;
+    }
+  }
+  initRole() async {
+    await db
+        .collection("UserRole")
+        .doc(user?.uid)
+        .get()
+        .then((querySnapshot) async {
+      userRole = querySnapshot["role"];
+      setState(() {});
+    });
+  }
+  Future<void> deletePractice() async {
+    PracticeModel p =practiceList[index];
+    practiceList.remove(p);
+    setState(() {
+    });
+    final collection = FirebaseFirestore.instance.collection('Practice');
+    collection
+        .doc(p.id) // <-- Doc ID to be deleted.
+        .delete() // <-- Delete
+        .then((_) => {
+              ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(S.of(context).deletedSuccessfully)))
+            })
+        .catchError((e) => {
+              ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(S.of(context).deleteFailed)))
+            });
+  }
+
+  initFromDb() async {
+    {
+      practiceList = [];
+      practiceList = await sql.getPracticeModelsByTopic(topic.id);
+      enabled = true;
+      setState(() {});
+    }
+  }
+
+  downloadPractice() async {
+    if (downloaded) {
+      try {
+        await sql.deleteById(practiceList[index].id, "Practice");
+        bool practice = await sql.arePracticesInTopic(topic.id);
+        bool quiz = await sql.isQuizSaved(topic.id);
+        bool theory = await sql.isTheorySaved(topic.id);
+        if (!practice && !quiz && !theory) {
+          await sql.deleteById(topic.id, "Topic");
+          bool topics = await sql.areTopicsInSection(topic.sectionId);
+          bool sectionQuiz = await sql.isSectionQuizSaved(topic.sectionId);
+          if (!topics && !sectionQuiz) {
+            await sql.deleteById(topic.sectionId, "Section");
+          }
+        }
+        var temp = await sql.isPracticeSaved(practiceList[index].id);
+        setState(() {
+          downloaded = temp;
+        });
+      } on DatabaseException catch (e) {
+        print(e.toString());
+      }
+    } else if (connected) {
+      try {
+        bool isSection = await sql.isSectionSaved(topic.sectionId);
+        if (!isSection) {
+          await sql.insertSection(section);
+          bool isTopic = await sql.isTopicSaved(topic.id);
+          if (!isTopic) {
+            await sql.insertTopic(topic);
+          }
+        }
+        await sql.insertPracticeModel(practiceList[index]);
+        var temp = await sql.isPracticeSaved(practiceList[index].id);
+        setState(() {
+          downloaded = temp;
+        });
+      } on DatabaseException catch (e) {
+        print(e.toString());
+      }
+    }
+  }
+
+  Future<dynamic> initPractice() async {
     await db
         .collection("Practice")
         .where("topicId", isEqualTo: topic.id)
         .get()
         .then((querySnapshot) async {
-      print("sections by level completed");
+      print("practice by topic completed");
       practiceList = [];
       for (var docSnapshot in querySnapshot.docs) {
         practiceList.add(PracticeModel(
@@ -77,21 +202,27 @@ class _Practice extends State<Practice> {
                       .get()
                       .then((value) async {
                     completedPractice = [];
-                    for (var item in value.docs) {
-                      completedPractice.add(item["practice"]);
-                    }
-                    var removeList = [];
-                    for (var i in practiceList) {
-                      if (completedPractice.contains(i.id)) {
-                        removeList.add(i);
+                    if (value.size != 0) {
+                      print("here here");
+                      for (var item in value.docs) {
+                        completedPractice.add(item["practice"]);
+                      }
+                      var removeList = [];
+                      for (var i in practiceList) {
+                        if (completedPractice.contains(i.id)) {
+                          removeList.add(i);
+                        }
+                      }
+                      for (var i in removeList) {
+                        practiceList.remove(i);
                       }
                     }
-                    for (var i in removeList) {
-                      practiceList.remove(i);
-                    }
+                    enabled = true;
+                    setState(() {});
                   })
                 },
-            onError: (e) => print("Error fetching completed practice by topic"));
+            onError: (e) => print(
+                "Error fetching completed practice by topic" + e.toString()));
 
     setState(() {});
   }
@@ -153,16 +284,76 @@ class _Practice extends State<Practice> {
     return SingleChildScrollView(
         child: Column(
       children: [
-        Text(correct == true ? S.of(context).correct : S.of(context).incorrect),
-        Math.tex(practiceList[index].result, mathStyle: MathStyle.display),
-        Math.tex(practiceList[index].solutions, mathStyle: MathStyle.display),
-        if (practiceList[index].resultImg != "")
-          CachedNetworkImage(
-            imageUrl: practiceList[index].resultImg,
-            placeholder: (context, url) => const CircularProgressIndicator(),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            FloatingActionButton.extended(
+              heroTag: "btn1",
+              onPressed: () {
+                if (enabled) {
+                  downloadPractice();
+                  setState(() {});
+                }
+              },
+              label: downloaded == true
+                  ? Text(S.of(context).downloaded)
+                  : Text(S.of(context).download),
+              backgroundColor: downloaded == true ? Colors.pink : Colors.teal,
+              icon: const Icon(Icons.download_rounded),
+            ),
+            if(userRole=="admin")
+            FloatingActionButton.extended(
+              heroTag: "btn2",
+              onPressed: () {
+                if (enabled) {
+                  deletePractice();
+                  if (index + 1 < practiceList.length) {
+                    nextTask();
+                    }
+                  } else {
+                  endTasks();
+                }
+                  setState(() {});
+              },
+              label: Text(S.of(context).delete),
+              backgroundColor: Colors.pink,
+              icon: const Icon(Icons.delete_forever_rounded),
+            ),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.all(30.0),
+          child: Text(
+              correct == true ? S.of(context).correct : S.of(context).incorrect,
+              style:
+                  const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Math.tex(
+            practiceList[index].result,
+            mathStyle: MathStyle.display,
+            textStyle: const TextStyle(fontSize: 20),
           ),
-        //TO DO: result field to be filled after algorithm
-        const Text("Your result, if read from photo, if not from input"),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Math.tex(practiceList[index].solutions,
+              mathStyle: MathStyle.display,
+              textStyle: const TextStyle(fontSize: 20)),
+        ),
+        if (practiceList[index].resultImg != "")
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: CachedNetworkImage(
+              height: MediaQuery.of(context).size.height*0.25,
+
+              imageUrl: practiceList[index].resultImg,
+              placeholder: (context, url) => const CircularProgressIndicator(),
+            ),
+          ),
+        //TODO: result field to be filled after algorithm
+        // const Text("Your result, if read from photo, if not from input"),
         if (index + 1 < practiceList.length) nextTask() else endTasks()
       ],
     ));
@@ -172,35 +363,45 @@ class _Practice extends State<Practice> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Container(
-            margin: const EdgeInsets.all(15),
-            child: Text(
-              S.of(context).youFinishedAllPracticeQuestions,
-              style: const TextStyle(fontSize: 22),
-              textAlign: TextAlign.center,
-            )),
-        ElevatedButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            child: Text(
-              S.of(context).quit,
-              style: const TextStyle(fontSize: 20),
-            )),
-        ElevatedButton(
-            onPressed: () {
-              clearPractice();
-              setState(() {});
-              Navigator.of(context).pop();
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => Practice(
-                            topic: topic,
-                          )));
-            },
-            child: Text(S.of(context).startOver,
-                style: const TextStyle(fontSize: 20)))
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Container(
+              margin: const EdgeInsets.all(15),
+              child: Text(
+                S.of(context).youFinishedAllPracticeQuestions,
+                style: const TextStyle(fontSize: 22),
+                textAlign: TextAlign.center,
+              )),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text(
+                S.of(context).quit,
+                style: const TextStyle(fontSize: 20),
+              )),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: ElevatedButton(
+              onPressed: () {
+                clearPractice();
+                setState(() {});
+                Navigator.of(context).pop();
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => Practice(
+                              topic: topic,
+                              section: section,
+                            )));
+              },
+              child: Text(S.of(context).startOver,
+                  style: const TextStyle(fontSize: 20))),
+        )
       ],
     );
   }
@@ -208,26 +409,74 @@ class _Practice extends State<Practice> {
   Column nextTask() {
     return Column(
       children: [
-        ElevatedButton(
-            onPressed: () {
-              flag = true;
-              correct = false;
-              if (index + 1 < practiceList.length) {
-                index += 1;
-              }
-              setState(() {});
-            },
-            child: Text(S.of(context).next)),
-        if (!correct)
-          ElevatedButton(
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: ElevatedButton(
               onPressed: () {
                 flag = true;
+                correct = false;
+                if (index + 1 < practiceList.length) {
+                  index += 1;
+                  isDownloaded();
+                }
                 setState(() {});
               },
-              child: Text(S.of(context).tryAgain))
+              child: Text(S.of(context).next)),
+        ),
+        if (!correct)
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: ElevatedButton(
+                onPressed: () {
+                  flag = true;
+                  setState(() {});
+                },
+                child: Text(S.of(context).tryAgain)),
+          )
       ],
     );
   }
+
+  fileFromCamera() async {
+    final file = await imagePicker.pickImage(
+        source: ImageSource.camera, maxWidth: 1000, maxHeight: 1000);
+    PhotoDecoder d= PhotoDecoder();
+    if(file==null) return;
+    d.preProcessImage(file);
+
+
+
+    // int loopLimit =1000;
+    // for(int x = 0; x < loopLimit; x++) {
+    //   int red = decodedBytes[decodedImg.width*3 + x*3];
+    //   int green = decodedBytes[decodedImg.width*3 + x*3 + 1];
+    //   int blue = decodedBytes[decodedImg.width*3 + x*3 + 2];
+    //   imgArray.add([red, green, blue]);
+    // }
+    // print(imgArray);
+    // XFile? filePick = files;
+    // File selectedImg;
+    // if (filePick != null) {
+    //   selectedImg=(File(filePick.path));
+    //   List<int> imageBytes = selectedImg.readAsBytesSync();
+    //   String imageAsString = base64Encode(imageBytes);
+    //   Uint8List uint8list = base64.decode(imageAsString);
+    //   Image image = Image.memory(uint8list);
+    //   log(imageBytes.toString());
+    //   final pngByteData = await image.toByteData(format: ImageByteFormat.rawRgba);
+      // String base64Image = base64Encode(imageBytes);
+      // log(base64Image);
+      //
+      // await selectedImg.writeAsBytes(base64.decode());
+    //   setState(() {});
+    // } else {
+    //   if (!mounted) return;
+    //   ScaffoldMessenger.of(context).showSnackBar(
+    //       SnackBar(content: Text(S.of(context).nothingIsSelected)));
+    // }
+  }
+
+
 
   SingleChildScrollView buildTaskView() {
     late final inputController = MathFieldEditingController();
@@ -259,17 +508,20 @@ class _Practice extends State<Practice> {
                 children: [
                   if (practiceList[index].img != "")
                     SizedBox(
-                      height: MediaQuery.of(context).size.height * 0.25,
+                      height: MediaQuery
+                          .of(context)
+                          .size
+                          .height * 0.25,
                       child: CachedNetworkImage(
                         imageUrl: practiceList[index].img,
                         placeholder: (context, url) =>
-                            const CircularProgressIndicator(),
+                        const CircularProgressIndicator(),
                       ),
                     )
                 ],
               )
-              //Image.network(practiceList[index].img),
-              ),
+            //Image.network(practiceList[index].img),
+          ),
           Padding(
             padding: const EdgeInsets.all(6.0),
             child: MathField(
@@ -282,10 +534,12 @@ class _Practice extends State<Practice> {
               // Specify the variables the user can use (only in expression mode).
               decoration: InputDecoration(
                 contentPadding:
-                    const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
                 border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10.0)),
-                hintText: S.of(context).yourSolution,
+                hintText: S
+                    .of(context)
+                    .yourSolution,
               ),
               // Decorate the input field using the familiar InputDecoration.
               onChanged: (String value) {},
@@ -295,13 +549,15 @@ class _Practice extends State<Practice> {
               },
               // Respond to the user submitting their input.
               autofocus:
-                  false, // Enable or disable autofocus of the input field.
+              false, // Enable or disable autofocus of the input field.
             ),
           ),
           Container(
             margin: const EdgeInsets.only(top: 30),
             child: ElevatedButton(
-                onPressed: () {},
+                onPressed: () {
+                  fileFromCamera();
+                },
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -311,7 +567,9 @@ class _Practice extends State<Practice> {
                     ),
                     Padding(
                       padding: const EdgeInsets.all(2.0),
-                      child: Text(S.of(context).submitPhotoOfSolution),
+                      child: Text(S
+                          .of(context)
+                          .submitPhotoOfSolution),
                     )
                   ],
                 )),
@@ -320,18 +578,27 @@ class _Practice extends State<Practice> {
               margin: const EdgeInsets.only(top: 30),
               padding: const EdgeInsets.all(8),
               child: ElevatedButton(
+                  style: ButtonStyle(
+                      backgroundColor: enabled == true
+                          ? MaterialStateProperty.all(Colors.pink)
+                          : MaterialStateProperty.all(Colors.blueGrey)),
                   onPressed: () {
-                    print(practiceList[index].result);
-                    if (mathInput == practiceList[index].result) {
-                      correct = true;
-                      addPractice(practiceList[index].id);
+                    if (enabled) {
+                      print(practiceList[index].result);
+                      if (mathInput == practiceList[index].result) {
+                        correct = true;
+                        addPractice(practiceList[index].id);
+                      }
+                      flag = false;
+                      setState(() {});
                     }
-                    flag = false;
-                    setState(() {});
                   },
-                  child: Text(S.of(context).submitAnswer)))
+                  child: Text(S
+                      .of(context)
+                      .submitAnswer)))
         ],
       ),
     );
   }
+
 }

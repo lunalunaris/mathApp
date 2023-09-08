@@ -1,3 +1,4 @@
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -13,26 +14,26 @@ class Register extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color(0xFFA52444),
-        title:  Text(
+        title: Text(
           S.of(context).registerPage,
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          style:
+              const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
       ),
       backgroundColor: Colors.white,
       body: Scaffold(
-        body:
-            Container(
-            decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.pink.shade500.withOpacity(0.8),
-                    Colors.teal.shade100.withOpacity(0.8),
-                  ],
-                )),
-            child: const UserForm(),),
-
+        body: Container(
+          decoration: BoxDecoration(
+              gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.pink.shade500.withOpacity(0.8),
+              Colors.teal.shade100.withOpacity(0.8),
+            ],
+          )),
+          child: const UserForm(),
+        ),
       ),
     );
   }
@@ -49,16 +50,18 @@ class _UserForm extends State<UserForm> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final passwordRepeatController = TextEditingController();
-  Color emailColor= Colors.pinkAccent;
+  bool connected = false;
+  Color emailColor = Colors.pinkAccent;
+
   registerUser() async {
     var email = emailController.text;
     var password = passwordController.text;
     var passwordRepeat = passwordRepeatController.text;
-    if (email==""){
+    if (email == "") {
       ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(S.of(context).emailFieldCannotBeEmpty)));
     }
-    if(password =="" || passwordRepeat==""){
+    if (password == "" || passwordRepeat == "") {
       ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(S.of(context).passewordFieldCannotBeEmpty)));
     }
@@ -71,12 +74,11 @@ class _UserForm extends State<UserForm> {
       } on FirebaseAuthException catch (e) {
         if (e.code == 'weak-password') {
           ScaffoldMessenger.of(context).showSnackBar(
-               SnackBar(content: Text(S.of(context).thePasswordIsTooWeak)));
+              SnackBar(content: Text(S.of(context).thePasswordIsTooWeak)));
         } else if (e.code == 'email-already-in-use') {
-          ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(S.of(context).anAccountAlreadyExistsForThatEmail)));
-        }
-        else if(e.code == 'invalid-email'){
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text(S.of(context).anAccountAlreadyExistsForThatEmail)));
+        } else if (e.code == 'invalid-email') {
           ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(S.of(context).theEmailIsInvalid)));
         }
@@ -84,9 +86,9 @@ class _UserForm extends State<UserForm> {
         print(e);
       }
       if (!mounted) return;
-      Navigator.push(context, MaterialPageRoute(builder: (context) => const Login()));
-    }
-    else {
+      Navigator.push(
+          context, MaterialPageRoute(builder: (context) => const Login()));
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(S.of(context).passwordsDontMatch)));
     }
@@ -103,7 +105,17 @@ class _UserForm extends State<UserForm> {
 
   @override
   void initState() {
+    initConnect();
+    setState(() {});
     super.initState();
+  }
+
+  initConnect() async {
+    final connectivityResult = await (Connectivity().checkConnectivity());
+    if (connectivityResult == ConnectivityResult.none ||
+        connectivityResult == ConnectivityResult.bluetooth) {
+      connected = false;
+    }
   }
 
   @override
@@ -123,7 +135,7 @@ class _UserForm extends State<UserForm> {
               const SizedBox(
                 height: 60,
               ),
-               Text(S.of(context).logIn,
+              Text(S.of(context).logIn,
                   style: const TextStyle(
                       fontSize: 30,
                       color: Colors.pink,
@@ -131,7 +143,7 @@ class _UserForm extends State<UserForm> {
               const SizedBox(
                 height: 20,
               ),
-               Text(S.of(context).welcomeBack,
+              Text(S.of(context).welcomeBack,
                   style: const TextStyle(fontSize: 20, color: Colors.teal)),
               const SizedBox(
                 height: 30,
@@ -145,8 +157,8 @@ class _UserForm extends State<UserForm> {
                       autovalidateMode: AutovalidateMode.onUserInteraction,
                       decoration: InputDecoration(
                         errorText: S.of(context).emailFieldCannotBeEmpty,
-                        errorBorder:  const OutlineInputBorder(
-                          borderSide:  BorderSide(color: Colors.red, width: 0.0),
+                        errorBorder: const OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.red, width: 0.0),
                         ),
                         contentPadding: const EdgeInsets.symmetric(
                             vertical: 10, horizontal: 20),
@@ -172,8 +184,9 @@ class _UserForm extends State<UserForm> {
                         controller: passwordController,
                         decoration: InputDecoration(
                             errorText: S.of(context).passwordFieldCannotBeEmpty,
-                            errorBorder:  const OutlineInputBorder(
-                              borderSide:  BorderSide(color: Colors.red, width: 0.0),
+                            errorBorder: const OutlineInputBorder(
+                              borderSide:
+                                  BorderSide(color: Colors.red, width: 0.0),
                             ),
                             contentPadding: const EdgeInsets.symmetric(
                                 vertical: 10, horizontal: 20),
@@ -206,8 +219,9 @@ class _UserForm extends State<UserForm> {
                       },
                       decoration: InputDecoration(
                           errorText: S.of(context).passwordFieldCannotBeEmpty,
-                          errorBorder:  const OutlineInputBorder(
-                            borderSide:  BorderSide(color: Colors.red, width: 0.0),
+                          errorBorder: const OutlineInputBorder(
+                            borderSide:
+                                BorderSide(color: Colors.red, width: 0.0),
                           ),
                           contentPadding: const EdgeInsets.symmetric(
                               vertical: 10, horizontal: 20),
@@ -226,15 +240,20 @@ class _UserForm extends State<UserForm> {
                       registerUser();
                     },
                     style: ButtonStyle(
-                        fixedSize: MaterialStateProperty.all(const Size(200, 50)),
-                        backgroundColor: MaterialStateProperty.all(Colors.teal),
-                        shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                            RoundedRectangleBorder(
+                        fixedSize:
+                            MaterialStateProperty.all(const Size(200, 50)),
+                        backgroundColor: connected == true
+                            ? MaterialStateProperty.all(Colors.teal)
+                            : MaterialStateProperty.all(Colors.blueGrey),
+                        shape:
+                            MaterialStateProperty.all<RoundedRectangleBorder>(
+                                RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ))),
-                    child:  Text(
+                    child: Text(
                       S.of(context).register,
-                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                          fontSize: 20, fontWeight: FontWeight.bold),
                     )),
               )
             ],

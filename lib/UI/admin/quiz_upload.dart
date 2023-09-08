@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -25,6 +26,7 @@ class _UploadQuiz extends State<UploadQuiz> {
   late User? user;
   late String container;
   late String type;
+   bool connected=true;
   FirebaseFirestore db = FirebaseFirestore.instance;
   firebase_storage.FirebaseStorage storage =
       firebase_storage.FirebaseStorage.instance;
@@ -59,9 +61,20 @@ class _UploadQuiz extends State<UploadQuiz> {
   void initState() {
     container = widget.container;
     type = widget.type;
-    user = FirebaseAuth.instance.currentUser;
+    initConnect();
+    if(connected){
+      user = FirebaseAuth.instance.currentUser;
+    }
     super.initState();
   }
+  initConnect() async {
+    final connectivityResult = await (Connectivity().checkConnectivity());
+    if (connectivityResult == ConnectivityResult.none ||
+        connectivityResult == ConnectivityResult.bluetooth) {
+      connected = false;
+    }
+  }
+
 
   Future<void> addQuiz(QuizModel quiz) async {
     db.collection("Quiz").add(quiz.toFirestore()).then((documentSnapshot) =>
@@ -371,16 +384,27 @@ class _UploadQuiz extends State<UploadQuiz> {
               ],
             ),
             ElevatedButton(
+                style: ButtonStyle(
+                    backgroundColor:  connected==true ? MaterialStateProperty.all(Colors.pink): MaterialStateProperty.all(Colors.blueGrey)
+                ),
                 onPressed: () {
-                  submitQuiz(context);
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => UploadQuiz(
-                                container: container,
-                                type: type,
-                              )));
-                  Navigator.pop(context);
+                  if(connected) {
+                    submitQuiz(context);
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) =>
+                                UploadQuiz(
+                                  container: container,
+                                  type: type,
+                                )));
+                    Navigator.pop(context);
+                  }
+                  else {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content:
+                        Text(S.of(context).noInternetConnection)));
+                  }
                 },
                 child: Text(S.of(context).submit))
           ],

@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -6,6 +7,8 @@ import 'package:math/UI/account/login.dart';
 import 'package:math/UI/admin/admin_init.dart';
 import 'package:math/UI/learning/learning.dart';
 import 'package:math/UI/learning/level_choice.dart';
+
+import '../../generated/l10n.dart';
 
 class UserSettings extends StatefulWidget {
   @override
@@ -17,19 +20,41 @@ class UserSettings extends StatefulWidget {
 class _Settings extends State<UserSettings> {
   late User? user;
   late String userRole = "";
-  FirebaseFirestore db = FirebaseFirestore.instance;
+  bool connected=true;
+  late FirebaseFirestore db;
 
   @override
   void initState() {
+    initConnect();
+    if(connected) {
+    db = FirebaseFirestore.instance;
     user = FirebaseAuth.instance.currentUser;
-    initRole();
+      initRole();
+    }
     super.initState();
   }
-
-  clearProgress() {
-    clearPractice();
-    clearSection();
-    clearTopic();
+  initConnect ()async{
+    final connectivityResult = await (Connectivity().checkConnectivity());
+    if(connectivityResult==ConnectivityResult.none || connectivityResult==ConnectivityResult.bluetooth){
+      connected=false;
+    }
+    setState(() {
+    });
+  }
+  clearProgress(BuildContext context) {
+    try {
+      clearPractice();
+      clearSection();
+      clearTopic();
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(S.of(context).progressCleared)));
+    }
+    catch (e){
+      print(e.toString());
+      if(!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(S.of(context).errorCleaningProgress)));
+    }
   }
 
   initRole() async {
@@ -87,7 +112,7 @@ class _Settings extends State<UserSettings> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Settings"),
+        title:  Text(S.of(context).settings),
       ),
       body: Container(
           alignment: Alignment.center,
@@ -119,10 +144,10 @@ class _Settings extends State<UserSettings> {
                     leading: const Icon(Icons.change_circle_outlined),
                     title: TextButton(
                         onPressed: () {
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => LevelChoice()));
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => const LevelChoice()));
                         },
                         style: ButtonStyle(
                             backgroundColor: MaterialStateProperty.all(
@@ -133,9 +158,9 @@ class _Settings extends State<UserSettings> {
                               borderRadius:
                                   BorderRadius.all(Radius.circular(5)),
                             ))),
-                        child: const Text(
-                          "Change level",
-                          style: TextStyle(
+                        child:  Text(
+                          S.of(context).changeLevel,
+                          style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                               color: Colors.black54),
@@ -148,7 +173,10 @@ class _Settings extends State<UserSettings> {
                     leading: const Icon(Icons.cleaning_services_rounded),
                     title: TextButton(
                         onPressed: () {
-                          clearProgress(); //implement some kind of notification
+                          if(connected) {
+                            clearProgress(context);
+
+                          }//implement some kind of notification
                         },
                         style: ButtonStyle(
                             backgroundColor: MaterialStateProperty.all(
@@ -159,12 +187,12 @@ class _Settings extends State<UserSettings> {
                               borderRadius:
                                   BorderRadius.all(Radius.circular(5)),
                             ))),
-                        child: const Text(
-                          "Clear progress",
+                        child:  Text(
+                          S.of(context).clearProgress,
                           style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: Colors.black54),
+                              color: connected==true ? Colors.black54: Colors.blueGrey),
                         )),
                   ),
                   const Divider(
@@ -174,7 +202,9 @@ class _Settings extends State<UserSettings> {
                     leading: const Icon(Icons.logout_rounded),
                     title: TextButton(
                         onPressed: () {
-                          signOutUser();
+                          if(connected) {
+                            signOutUser();
+                          }
                         },
                         style: ButtonStyle(
                             backgroundColor: MaterialStateProperty.all(
@@ -185,12 +215,12 @@ class _Settings extends State<UserSettings> {
                               borderRadius:
                                   BorderRadius.all(Radius.circular(5)),
                             ))),
-                        child: const Text(
-                          "Log out",
+                        child:  Text(
+                          S.of(context).logOut,
                           style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: Colors.black54),
+                              color: connected==true ? Colors.black54: Colors.blueGrey),
                         )),
                   ),
                   const Divider(
@@ -201,10 +231,12 @@ class _Settings extends State<UserSettings> {
                       leading: const Icon(Icons.admin_panel_settings_rounded),
                       title: TextButton(
                           onPressed: () {
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => AdminInit()));
+                            if(connected) {
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => AdminInit()));
+                            }
                           },
                           style: ButtonStyle(
                               backgroundColor: MaterialStateProperty.all(
@@ -215,12 +247,12 @@ class _Settings extends State<UserSettings> {
                                 borderRadius:
                                     BorderRadius.all(Radius.circular(5)),
                               ))),
-                          child: const Text(
-                            "Admin panel",
+                          child:  Text(
+                            S.of(context).adminPanel,
                             style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.black54),
+                                color: connected==true ? Colors.black54: Colors.blueGrey),
                           )),
                     ),
                   const Divider(
@@ -230,53 +262,22 @@ class _Settings extends State<UserSettings> {
               ),
             ),
           )),
-      //   Table(
-      //       children: [
-      //         TableRow(children: [
-      //           ElevatedButton(
-      //               onPressed: () {
-      //                 Navigator.push(
-      //                     context,
-      //                     MaterialPageRoute(
-      //                         builder: (context) =>
-      //                             LevelChoice(user: user)));
-      //               },
-      //               child: Text("Change class"))
-      //         ]),
-      //         TableRow(children: [
-      //           ElevatedButton(onPressed: () {
-      //             clearProgress();
-      //           }, child: Text("Clear progress")),
-      //         ]),
-      //         TableRow(children: [
-      //           ElevatedButton(
-      //               onPressed: () {
-      //                 //logout the user
-      //                 Navigator.push(
-      //                     context, MaterialPageRoute(builder: (context) =>
-      //                     Login()));
-      //               },
-      //               child: Text("Log out"))
-      //         ])
-      //
-      //       ])
-      //
-      // ])),
+
       bottomNavigationBar: BottomNavigationBar(
           backgroundColor: Colors.teal,
           currentIndex: 2,
-          items: const <BottomNavigationBarItem>[
+          items:  <BottomNavigationBarItem>[
             BottomNavigationBarItem(
-              icon: Icon(Icons.book),
-              label: "Learn",
+              icon: const Icon(Icons.book),
+              label: S.of(context).learn,
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.games),
-              label: "Game",
+              icon: const Icon(Icons.games),
+              label: S.of(context).game,
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.settings),
-              label: "Setup",
+              icon: const Icon(Icons.settings),
+              label: S.of(context).setup,
             ),
           ],
           onTap: (option) {
@@ -308,3 +309,35 @@ class _Settings extends State<UserSettings> {
     );
   }
 }
+//   Table(
+//       children: [
+//         TableRow(children: [
+//           ElevatedButton(
+//               onPressed: () {
+//                 Navigator.push(
+//                     context,
+//                     MaterialPageRoute(
+//                         builder: (context) =>
+//                             LevelChoice(user: user)));
+//               },
+//               child: Text("Change class"))
+//         ]),
+//         TableRow(children: [
+//           ElevatedButton(onPressed: () {
+//             clearProgress();
+//           }, child: Text("Clear progress")),
+//         ]),
+//         TableRow(children: [
+//           ElevatedButton(
+//               onPressed: () {
+//                 //logout the user
+//                 Navigator.push(
+//                     context, MaterialPageRoute(builder: (context) =>
+//                     Login()));
+//               },
+//               child: Text("Log out"))
+//         ])
+//
+//       ])
+//
+// ])),

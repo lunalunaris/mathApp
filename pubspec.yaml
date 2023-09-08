@@ -49,20 +49,30 @@ dependencies:
 #  image_picker: ^0.8.4
   cached_network_image: ^3.2.3
   image_picker: ^1.0.4
+  connectivity_plus: ^4.0.2
+  image: ^4.0.17
   flutter_localizations:
     sdk: flutter
   intl: ^0.18.0
+  flutter_launcher_icons: ^0.13.1
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^2.0.0
-
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/logo.png"
+  web:
+    generate: true
+    image_path: "assets/logo.png"
+    background_color: "#460082"
+    theme_color: "#168F8C"
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
@@ -76,7 +86,9 @@ flutter:
   generate: true
   assets:
     - assets/theory.png
-
+    - assets/logo.png
+    - assets/temp2.png
+    - assets/temp3.png
   # To add assets to your application, add an assets section, like this:
 
 

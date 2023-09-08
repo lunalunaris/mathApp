@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:math/Model/SectionModel.dart';
@@ -31,6 +32,7 @@ class _TopicChoiceAdmin extends State<TopicChoiceAdmin> {
     TopicModel(id: "temo", name: "Loading...", sectionId: "temp", lang: "en_US")
   ];
   late List<String> completedTopics = [];
+  bool connected = true;
 
   @override
   void initState() {
@@ -38,7 +40,12 @@ class _TopicChoiceAdmin extends State<TopicChoiceAdmin> {
     section = widget.section;
     lang = widget.lang;
     type = widget.type;
-    initTopicList(section);
+    initConnect();
+    if (connected) {
+      initTopicList(section);
+    } else {
+      topics = [];
+    }
     super.initState();
   }
 
@@ -85,6 +92,14 @@ class _TopicChoiceAdmin extends State<TopicChoiceAdmin> {
                     type: type,
                     container: topicModel.id,
                   )));
+    }
+  }
+
+  initConnect() async {
+    final connectivityResult = await (Connectivity().checkConnectivity());
+    if (connectivityResult == ConnectivityResult.none ||
+        connectivityResult == ConnectivityResult.bluetooth) {
+      connected = false;
     }
   }
 
@@ -139,7 +154,9 @@ class _TopicChoiceAdmin extends State<TopicChoiceAdmin> {
                     ),
                     title: TextButton(
                         onPressed: () {
-                          next(i);
+                          if(connected) {
+                            next(i);
+                          }
                         },
                         style: ButtonStyle(
                             backgroundColor: MaterialStateProperty.all(

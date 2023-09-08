@@ -1,3 +1,4 @@
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -15,7 +16,8 @@ class RecoverPasswd extends StatelessWidget {
         backgroundColor: const Color(0xFFA52444),
         title: Text(
           S.of(context).recoverPassword,
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          style:
+              const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
       ),
       body: Container(
@@ -43,24 +45,26 @@ class UserForm extends StatefulWidget {
 
 class _UserForm extends State<UserForm> {
   final emailController = TextEditingController();
+  bool connected = false;
 
   RecoverPasswdUser(BuildContext context) async {
     var email = emailController.text;
     //notifications if email is not used, etc
     var status;
-    try{
-      await FirebaseAuth.instance.sendPasswordResetEmail(email: email).catchError((e)=>status=e);
-
-    }
-    on FirebaseAuthException catch  (e) {
-      if(e.code=="invalid-email"){
+    try {
+      await FirebaseAuth.instance
+          .sendPasswordResetEmail(email: email)
+          .catchError((e) => status = e);
+    } on FirebaseAuthException catch (e) {
+      if (e.code == "invalid-email") {
         ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(S.of(context).invalidEmailAddress)));
       }
     }
-    
+
     if (!mounted) return;
-    Navigator.push(context, MaterialPageRoute(builder: (context) => const Login()));
+    Navigator.push(
+        context, MaterialPageRoute(builder: (context) => const Login()));
     // displayDialog(context, "Incorrect Input", "Invalid credentials");
   }
 
@@ -73,7 +77,17 @@ class _UserForm extends State<UserForm> {
 
   @override
   void initState() {
+    initConnect();
+    setState(() {});
     super.initState();
+  }
+
+  initConnect() async {
+    final connectivityResult = await (Connectivity().checkConnectivity());
+    if (connectivityResult == ConnectivityResult.none ||
+        connectivityResult == ConnectivityResult.bluetooth) {
+      connected = false;
+    }
   }
 
   @override
@@ -123,12 +137,19 @@ class _UserForm extends State<UserForm> {
                 margin: const EdgeInsets.all(25),
                 child: ElevatedButton(
                     onPressed: () {
-                      RecoverPasswdUser(context);
+                      if (connected) {
+                        RecoverPasswdUser(context);
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: Text(S.of(context).noInternetConnection)));
+                      }
                     },
                     style: ButtonStyle(
                         fixedSize:
                             MaterialStateProperty.all(const Size(200, 50)),
-                        backgroundColor: MaterialStateProperty.all(Colors.teal),
+                        backgroundColor: connected == true
+                            ? MaterialStateProperty.all(Colors.teal)
+                            : MaterialStateProperty.all(Colors.blueGrey),
                         shape:
                             MaterialStateProperty.all<RoundedRectangleBorder>(
                                 RoundedRectangleBorder(
@@ -136,8 +157,8 @@ class _UserForm extends State<UserForm> {
                         ))),
                     child: Text(
                       S.of(context).recoverPassword,
-                      style:
-                          const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                          fontSize: 20, fontWeight: FontWeight.bold),
                     )),
               )
             ],

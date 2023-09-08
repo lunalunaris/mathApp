@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:math/Model/SectionModel.dart';
@@ -29,6 +30,7 @@ class _SectionChoice extends State<SectionChoice> {
   late String? level;
   late String lang;
   late String type;
+  bool connected=true;
   late SectionModel section;
 
   TextEditingController topicController = TextEditingController();
@@ -43,10 +45,27 @@ class _SectionChoice extends State<SectionChoice> {
     lang = widget.lang;
     level = widget.level;
     type = widget.type;
-    initLevel();
+    initConnect();
+    if(connected){
+      initLevel();
+    }
+    else {
+      sections = [
+        SectionModel(id: "temp",
+            name: "No internet connection",
+            level: "0",
+            lang: "en_US")
+      ];
+    }
     super.initState();
   }
-
+  initConnect() async {
+    final connectivityResult = await (Connectivity().checkConnectivity());
+    if (connectivityResult == ConnectivityResult.none ||
+        connectivityResult == ConnectivityResult.bluetooth) {
+      connected = false;
+    }
+  }
   Future<void> addTopic() async {
     try{
       db.collection("Topic").add(
@@ -226,9 +245,19 @@ class _SectionChoice extends State<SectionChoice> {
                     ),
                   ),
                   ElevatedButton(
+                      style: ButtonStyle(
+                          backgroundColor:  connected==true ? MaterialStateProperty.all(Colors.pink): MaterialStateProperty.all(Colors.blueGrey)
+                      ),
                       onPressed: () {
-                        addTopic();
-                        Navigator.of(context).pop();
+                        if(connected) {
+                          addTopic();
+                          Navigator.of(context).pop();
+                        }
+                        else {
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                              content:
+                              Text(S.of(context).noInternetConnection)));
+                        }
                       },
                       child: Text(S.of(context).submit))
                 ],
