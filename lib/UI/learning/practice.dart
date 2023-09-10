@@ -1,8 +1,4 @@
-import 'dart:convert';
-import 'dart:developer';
 import 'dart:io';
-import 'dart:typed_data';
-import 'dart:ui';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -10,6 +6,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
+import 'package:http/http.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:math/Database/sqliteHandler.dart';
 import 'package:math/Model/PracticeModel.dart';
@@ -18,9 +15,7 @@ import 'package:math/Model/TopicModel.dart';
 import 'package:math/generated/l10n.dart';
 import 'package:math_keyboard/math_keyboard.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:image/image.dart' as Imagi;
 
-import '../../Algorithm/PhotoDecoder.dart';
 class Practice extends StatefulWidget {
   late TopicModel topic;
   late SectionModel section;
@@ -47,7 +42,7 @@ class _Practice extends State<Practice> {
   bool downloaded = false;
   bool correct = false;
   bool enabled = false;
-  String userRole="";
+  String userRole = "";
   int index = 0;
   List<PracticeModel> practiceList = [
     PracticeModel(
@@ -93,6 +88,7 @@ class _Practice extends State<Practice> {
       connected = false;
     }
   }
+
   initRole() async {
     await db
         .collection("UserRole")
@@ -103,11 +99,11 @@ class _Practice extends State<Practice> {
       setState(() {});
     });
   }
+
   Future<void> deletePractice() async {
-    PracticeModel p =practiceList[index];
+    PracticeModel p = practiceList[index];
     practiceList.remove(p);
-    setState(() {
-    });
+    setState(() {});
     final collection = FirebaseFirestore.instance.collection('Practice');
     collection
         .doc(p.id) // <-- Doc ID to be deleted.
@@ -301,24 +297,24 @@ class _Practice extends State<Practice> {
               backgroundColor: downloaded == true ? Colors.pink : Colors.teal,
               icon: const Icon(Icons.download_rounded),
             ),
-            if(userRole=="admin")
-            FloatingActionButton.extended(
-              heroTag: "btn2",
-              onPressed: () {
-                if (enabled) {
-                  deletePractice();
-                  if (index + 1 < practiceList.length) {
-                    nextTask();
+            if (userRole == "admin")
+              FloatingActionButton.extended(
+                heroTag: "btn2",
+                onPressed: () {
+                  if (enabled) {
+                    deletePractice();
+                    if (index + 1 < practiceList.length) {
+                      nextTask();
                     }
                   } else {
-                  endTasks();
-                }
+                    endTasks();
+                  }
                   setState(() {});
-              },
-              label: Text(S.of(context).delete),
-              backgroundColor: Colors.pink,
-              icon: const Icon(Icons.delete_forever_rounded),
-            ),
+                },
+                label: Text(S.of(context).delete),
+                backgroundColor: Colors.pink,
+                icon: const Icon(Icons.delete_forever_rounded),
+              ),
           ],
         ),
         Padding(
@@ -346,8 +342,7 @@ class _Practice extends State<Practice> {
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: CachedNetworkImage(
-              height: MediaQuery.of(context).size.height*0.25,
-
+              height: MediaQuery.of(context).size.height * 0.25,
               imageUrl: practiceList[index].resultImg,
               placeholder: (context, url) => const CircularProgressIndicator(),
             ),
@@ -439,44 +434,30 @@ class _Practice extends State<Practice> {
 
   fileFromCamera() async {
     final file = await imagePicker.pickImage(
-        source: ImageSource.camera, maxWidth: 1000, maxHeight: 1000);
-    PhotoDecoder d= PhotoDecoder();
-    if(file==null) return;
-    d.preProcessImage(file);
+        source: ImageSource.camera, maxWidth: 500, maxHeight: 500);
+    // PhotoDecoder d= PhotoDecoder();
+    if (file == null) return;
+    File newFile = File(file.path);
+    var decodedImage = await decodeImageFromList(newFile.readAsBytesSync());
 
-
-
-    // int loopLimit =1000;
-    // for(int x = 0; x < loopLimit; x++) {
-    //   int red = decodedBytes[decodedImg.width*3 + x*3];
-    //   int green = decodedBytes[decodedImg.width*3 + x*3 + 1];
-    //   int blue = decodedBytes[decodedImg.width*3 + x*3 + 2];
-    //   imgArray.add([red, green, blue]);
-    // }
-    // print(imgArray);
-    // XFile? filePick = files;
-    // File selectedImg;
-    // if (filePick != null) {
-    //   selectedImg=(File(filePick.path));
-    //   List<int> imageBytes = selectedImg.readAsBytesSync();
-    //   String imageAsString = base64Encode(imageBytes);
-    //   Uint8List uint8list = base64.decode(imageAsString);
-    //   Image image = Image.memory(uint8list);
-    //   log(imageBytes.toString());
-    //   final pngByteData = await image.toByteData(format: ImageByteFormat.rawRgba);
-      // String base64Image = base64Encode(imageBytes);
-      // log(base64Image);
-      //
-      // await selectedImg.writeAsBytes(base64.decode());
-    //   setState(() {});
-    // } else {
-    //   if (!mounted) return;
-    //   ScaffoldMessenger.of(context).showSnackBar(
-    //       SnackBar(content: Text(S.of(context).nothingIsSelected)));
-    // }
+    File f = File(file.path);
+    print(f.readAsBytes().toString());
+    final uri = Uri.http("192.168.1.7:5000", '/upload');
+    var request = MultipartRequest('POST', uri);
+    Map<String, String> headers = {"Content-type": "multipart/form-data"};
+    request.files.add(
+      MultipartFile('image', f.readAsBytes().asStream(), f.lengthSync(),
+          filename: "filename.jpg"),
+    );
+    print(request.files.first.length.toString());
+    request.headers.addAll(headers);
+    request.fields["height"] = decodedImage.height.toString();
+    request.fields["width"] = decodedImage.width.toString();
+    print("request: " + request.toString());
+    var res = await request.send();
+    Response response = await Response.fromStream(res);
+    print(response.body.toString());
   }
-
-
 
   SingleChildScrollView buildTaskView() {
     late final inputController = MathFieldEditingController();
@@ -508,20 +489,17 @@ class _Practice extends State<Practice> {
                 children: [
                   if (practiceList[index].img != "")
                     SizedBox(
-                      height: MediaQuery
-                          .of(context)
-                          .size
-                          .height * 0.25,
+                      height: MediaQuery.of(context).size.height * 0.25,
                       child: CachedNetworkImage(
                         imageUrl: practiceList[index].img,
                         placeholder: (context, url) =>
-                        const CircularProgressIndicator(),
+                            const CircularProgressIndicator(),
                       ),
                     )
                 ],
               )
-            //Image.network(practiceList[index].img),
-          ),
+              //Image.network(practiceList[index].img),
+              ),
           Padding(
             padding: const EdgeInsets.all(6.0),
             child: MathField(
@@ -534,12 +512,10 @@ class _Practice extends State<Practice> {
               // Specify the variables the user can use (only in expression mode).
               decoration: InputDecoration(
                 contentPadding:
-                const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                    const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
                 border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10.0)),
-                hintText: S
-                    .of(context)
-                    .yourSolution,
+                hintText: S.of(context).yourSolution,
               ),
               // Decorate the input field using the familiar InputDecoration.
               onChanged: (String value) {},
@@ -549,27 +525,37 @@ class _Practice extends State<Practice> {
               },
               // Respond to the user submitting their input.
               autofocus:
-              false, // Enable or disable autofocus of the input field.
+                  false, // Enable or disable autofocus of the input field.
             ),
           ),
           Container(
             margin: const EdgeInsets.only(top: 30),
             child: ElevatedButton(
+                style: ButtonStyle(
+                  backgroundColor: connected == true
+                      ? MaterialStateProperty.all(Colors.pink)
+                      : MaterialStateProperty.all(Colors.blueGrey),
+                ),
                 onPressed: () {
-                  fileFromCamera();
+                  if (connected) {
+                    fileFromCamera();
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text(S.of(context).noInternetConnection)));
+                  }
                 },
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const Padding(
                       padding: EdgeInsets.all(4.0),
-                      child: Icon(Icons.camera_alt_rounded),
+                      child: Icon(
+                        Icons.camera_alt_rounded,
+                      ),
                     ),
                     Padding(
                       padding: const EdgeInsets.all(2.0),
-                      child: Text(S
-                          .of(context)
-                          .submitPhotoOfSolution),
+                      child: Text(S.of(context).submitPhotoOfSolution),
                     )
                   ],
                 )),
@@ -593,12 +579,9 @@ class _Practice extends State<Practice> {
                       setState(() {});
                     }
                   },
-                  child: Text(S
-                      .of(context)
-                      .submitAnswer)))
+                  child: Text(S.of(context).submitAnswer)))
         ],
       ),
     );
   }
-
 }
