@@ -38,6 +38,10 @@ class _Topic extends State<Topic> {
     user = FirebaseAuth.instance.currentUser;
     topic = widget.topic;
     section = widget.section;
+    initConnect();
+    if (connected){
+    initRole();}
+    print(userRole);
     super.initState();
   }
 
@@ -51,7 +55,13 @@ class _Topic extends State<Topic> {
       setState(() {});
     });
   }
-
+  initConnect() async {
+    final connectivityResult = await (Connectivity().checkConnectivity());
+    if (connectivityResult == ConnectivityResult.none ||
+        connectivityResult == ConnectivityResult.bluetooth) {
+      connected = false;
+    }
+  }
   Future<void> clearPractice() async {
     try {
       var collection = FirebaseFirestore.instance
@@ -59,7 +69,10 @@ class _Topic extends State<Topic> {
           .where("topicId", isEqualTo: topic.id);
       var snapshots = await collection.get();
       for (var doc in snapshots.docs) {
-        await doc.reference.delete();
+        await doc.reference.delete().then((value) {
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(S.of(context).practiceTasksDeleted)));
+        });
       }
     } catch (e) {
       ScaffoldMessenger.of(context)
@@ -74,7 +87,10 @@ class _Topic extends State<Topic> {
           .where("topicId", isEqualTo: topic.id);
       var snapshots = await collection.get();
       for (var doc in snapshots.docs) {
-        await doc.reference.delete();
+        await doc.reference.delete().then((value) {
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(S.of(context).quizzesDeleted)));
+        });
       }
     } catch (e) {
       ScaffoldMessenger.of(context)
@@ -89,7 +105,10 @@ class _Topic extends State<Topic> {
           .where("topicId", isEqualTo: topic.id);
       var snapshots = await collection.get();
       for (var doc in snapshots.docs) {
-        await doc.reference.delete();
+        await doc.reference.delete().then((value) {
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(S.of(context).theoryDeleted)));
+        });
       }
     } catch (e) {
       ScaffoldMessenger.of(context)
@@ -97,13 +116,6 @@ class _Topic extends State<Topic> {
     }
   }
 
-  initConnect() async {
-    final connectivityResult = await (Connectivity().checkConnectivity());
-    if (connectivityResult == ConnectivityResult.none ||
-        connectivityResult == ConnectivityResult.bluetooth) {
-      connected = false;
-    }
-  }
 
   @override
   Widget build(BuildContext context) {

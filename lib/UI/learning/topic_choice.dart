@@ -287,12 +287,12 @@ class _TopicChoice extends State<TopicChoice> {
                     .of(context)
                     .learn,
               ),
-              BottomNavigationBarItem(
-                icon: const Icon(Icons.games),
-                label: S
-                    .of(context)
-                    .game,
-              ),
+              // BottomNavigationBarItem(
+              //   icon: const Icon(Icons.games),
+              //   label: S
+              //       .of(context)
+              //       .game,
+              // ),
               BottomNavigationBarItem(
                 icon: const Icon(Icons.settings),
                 label: S
@@ -309,7 +309,7 @@ class _TopicChoice extends State<TopicChoice> {
                       MaterialPageRoute(
                           builder: (context) => const Learning()));
                   break;
-                case 2:
+                case 1:
                   Navigator.of(context).pop();
                   Navigator.push(
                       context,

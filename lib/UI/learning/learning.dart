@@ -369,10 +369,10 @@ class _Learning extends State<Learning> {
                 icon: const Icon(Icons.book),
                 label: S.of(context).learn,
               ),
-              BottomNavigationBarItem(
-                icon: const Icon(Icons.games),
-                label: S.of(context).game,
-              ),
+              // BottomNavigationBarItem(
+              //   icon: const Icon(Icons.games),
+              //   label: S.of(context).game,
+              // ),
               BottomNavigationBarItem(
                 icon: const Icon(Icons.settings),
                 label: S.of(context).setup,
@@ -389,7 +389,7 @@ class _Learning extends State<Learning> {
                 //           builder: (context) =>
                 //               Game(user: user)));
                 //   break;
-                case 2:
+                case 1:
                   Navigator.of(context).pop();
                   Navigator.push(
                       context,

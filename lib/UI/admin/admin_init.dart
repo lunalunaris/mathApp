@@ -1,9 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:flutter/material.dart';
-import '../../generated/l10n.dart';
-import 'package:math/UI/admin/section_choice_admin.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:math/UI/admin/section_choice_admin.dart';
+
+import '../../generated/l10n.dart';
 
 class AdminInit extends StatefulWidget {
   AdminInit({
@@ -230,11 +231,16 @@ class _AdminInitState extends State<AdminInit> {
                     ? MaterialStateProperty.all(Colors.pink)
                     : MaterialStateProperty.all(Colors.blueGrey)),
             onPressed: () {
-              if (connected) {
-                next(context);
-              } else {
+              if (!connected) {
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                     content: Text(S.of(context).noInternetConnection)));
+              } else {
+                if (levelIndex != 99 && langIndex != 99 && typeIndex != 99) {
+                  next(context);
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text(S.of(context).chooseFromAllCategories)));
+                }
               }
             },
             child: Text(S.of(context).next))

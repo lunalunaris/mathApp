@@ -53,35 +53,7 @@ class _UploadTheory extends State<UploadTheory> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      resizeToAvoidBottomInset: false,
-      backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        title: Text(S.of(context).theory),
-      ),
-      body: Container(
-          decoration: BoxDecoration(
-              gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Colors.pink.shade500.withOpacity(0.8),
-              Colors.teal.shade100.withOpacity(0.8),
-            ],
-          )),
-          child: Container(
-              padding: const EdgeInsets.all(10),
-              margin: const EdgeInsets.all(30),
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10.0),
-                color: Colors.white.withOpacity(0.8),
-              ),
-              child: Column(children: [buildTheoryView(context)]))),
-    );
-  }
+
 
   Future getTheoryPhotos(BuildContext context) async {
     final files =
@@ -134,7 +106,35 @@ class _UploadTheory extends State<UploadTheory> {
           SnackBar(content: Text(S.of(context).nothingIsSelected)));
     }
   }
-
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      resizeToAvoidBottomInset: false,
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(
+        title: Text(S.of(context).theory),
+      ),
+      body: Container(
+          decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.pink.shade500.withOpacity(0.8),
+                  Colors.teal.shade100.withOpacity(0.8),
+                ],
+              )),
+          child: Container(
+              padding: const EdgeInsets.all(10),
+              margin: const EdgeInsets.all(30),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10.0),
+                color: Colors.white.withOpacity(0.8),
+              ),
+              child: Column(children: [buildTheoryView(context)]))),
+    );
+  }
   Expanded buildTheoryView(BuildContext context) {
     return Expanded(
       child: SingleChildScrollView(

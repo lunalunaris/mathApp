@@ -134,9 +134,20 @@ class _Settings extends State<UserSettings> {
               color: Colors.white.withOpacity(0.8),
             ),
             child: Container(
-              margin: const EdgeInsets.only(top: 200),
               child: ListView(
                 children: [
+                  Container(
+                      padding: const EdgeInsets.all(8),
+                      margin: const EdgeInsets.all(10),
+                      alignment: Alignment.center,
+                      width: 200,
+                      height: 200,
+                      decoration: const BoxDecoration(
+                          borderRadius:
+                          BorderRadius.all(Radius.circular(10)),
+                          image: DecorationImage(
+                              fit: BoxFit.fitHeight,
+                              image: AssetImage("assets/logo.png")))),
                   const Divider(
                     height: 0,
                   ),
@@ -265,16 +276,16 @@ class _Settings extends State<UserSettings> {
 
       bottomNavigationBar: BottomNavigationBar(
           backgroundColor: Colors.teal,
-          currentIndex: 2,
+          currentIndex: 1,
           items:  <BottomNavigationBarItem>[
             BottomNavigationBarItem(
               icon: const Icon(Icons.book),
               label: S.of(context).learn,
             ),
-            BottomNavigationBarItem(
-              icon: const Icon(Icons.games),
-              label: S.of(context).game,
-            ),
+            // BottomNavigationBarItem(
+            //   icon: const Icon(Icons.games),
+            //   label: S.of(context).game,
+            // ),
             BottomNavigationBarItem(
               icon: const Icon(Icons.settings),
               label: S.of(context).setup,

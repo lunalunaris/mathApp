@@ -50,7 +50,7 @@ class _UserForm extends State<UserForm> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final passwordRepeatController = TextEditingController();
-  bool connected = false;
+  bool connected = true;
   Color emailColor = Colors.pinkAccent;
 
   registerUser() async {
@@ -154,12 +154,8 @@ class _UserForm extends State<UserForm> {
                   padding: const EdgeInsets.all(8.0),
                   child: TextFormField(
                       controller: emailController,
-                      autovalidateMode: AutovalidateMode.onUserInteraction,
+                      autovalidateMode: AutovalidateMode.disabled,
                       decoration: InputDecoration(
-                        errorText: S.of(context).emailFieldCannotBeEmpty,
-                        errorBorder: const OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.red, width: 0.0),
-                        ),
                         contentPadding: const EdgeInsets.symmetric(
                             vertical: 10, horizontal: 20),
                         border: OutlineInputBorder(
@@ -178,12 +174,12 @@ class _UserForm extends State<UserForm> {
                   child: SingleChildScrollView(
                     child: TextFormField(
                         obscureText: true,
-                        autovalidateMode: AutovalidateMode.onUserInteraction,
+                        autovalidateMode: AutovalidateMode.disabled,
                         enableSuggestions: false,
                         autocorrect: false,
                         controller: passwordController,
                         decoration: InputDecoration(
-                            errorText: S.of(context).passwordFieldCannotBeEmpty,
+                            errorText: passwordController==""? S.of(context).passwordFieldCannotBeEmpty:null,
                             errorBorder: const OutlineInputBorder(
                               borderSide:
                                   BorderSide(color: Colors.red, width: 0.0),
@@ -218,7 +214,7 @@ class _UserForm extends State<UserForm> {
                         return null;
                       },
                       decoration: InputDecoration(
-                          errorText: S.of(context).passwordFieldCannotBeEmpty,
+                          errorText:passwordRepeatController==""? S.of(context).passwordFieldCannotBeEmpty:null,
                           errorBorder: const OutlineInputBorder(
                             borderSide:
                                 BorderSide(color: Colors.red, width: 0.0),

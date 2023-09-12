@@ -45,7 +45,7 @@ class UserForm extends StatefulWidget {
 
 class _UserForm extends State<UserForm> {
   final emailController = TextEditingController();
-  bool connected = false;
+  bool connected = true;
 
   RecoverPasswdUser(BuildContext context) async {
     var email = emailController.text;

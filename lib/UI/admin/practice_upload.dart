@@ -3,12 +3,12 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:math/Model/PracticeModel.dart';
 import 'package:math/generated/l10n.dart';
 import 'package:math_keyboard/math_keyboard.dart';
-import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:path/path.dart';
 
 class UploadPractice extends StatefulWidget {
@@ -40,13 +40,16 @@ class _UploadPractice extends State<UploadPractice> {
   MathFieldEditingController practiceSolutionsController =
       MathFieldEditingController();
   String solutionInput = "";
-
+  bool checkbox = false;
+  int photoSolution = 0;
   var imageUrl = "";
   Color cameraColorImg = Colors.black45;
   Color cameraColorResult = Colors.black45;
   File? solutionImg;
   File? taskImg;
-  File? tempFile;
+ File? tempFile;
+  bool solutionFile=false;
+  bool taskFile=false;
   bool connected = true;
   final ImagePicker imagePicker = ImagePicker();
 
@@ -113,12 +116,6 @@ class _UploadPractice extends State<UploadPractice> {
         var snapshotTask = await storage.ref(destTask).putFile(taskImg!);
         downloadUrlTask = await snapshotTask.ref.getDownloadURL();
       }
-      if (solutionImg != null) {
-        final nameSolution = basename(solutionImg!.path);
-        final destSol = 'practice/$nameSolution';
-        var snapshotSol = await storage.ref(destSol).putFile(solutionImg!);
-        downloadUrlSol = await snapshotSol.ref.getDownloadURL();
-      }
       PracticeModel practice = PracticeModel(
           id: "none",
           topicId: container,
@@ -126,8 +123,8 @@ class _UploadPractice extends State<UploadPractice> {
           equation: equationInput,
           img: downloadUrlTask,
           result: resultInput,
-          resultImg: downloadUrlSol,
-          solutions: solutionInput);
+          solutions: solutionInput,
+          photoSolution: photoSolution);
       try {
         addPractice(practice);
         if (!mounted) return;
@@ -196,7 +193,7 @@ class _UploadPractice extends State<UploadPractice> {
             child: MathField(
               controller: practiceEquationController,
               keyboardType: MathKeyboardType.expression,
-              variables: const ['x', 'y', 'z'],
+              variables: const ['x', 'y', 'z', "="],
               decoration: InputDecoration(
                 contentPadding:
                     const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
@@ -220,7 +217,7 @@ class _UploadPractice extends State<UploadPractice> {
             child: MathField(
               controller: practiceResultController,
               keyboardType: MathKeyboardType.expression,
-              variables: const ['x', 'y', 'z'],
+              variables: const ['x', 'y', 'z', "=","a","b","c","H","r"],
               decoration: InputDecoration(
                 contentPadding:
                     const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
@@ -244,7 +241,7 @@ class _UploadPractice extends State<UploadPractice> {
             child: MathField(
               controller: practiceSolutionsController,
               keyboardType: MathKeyboardType.expression,
-              variables: const ['x', 'y', 'z'],
+              variables: const ['x', 'y', 'z', "="],
               decoration: InputDecoration(
                 contentPadding:
                     const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
@@ -264,6 +261,26 @@ class _UploadPractice extends State<UploadPractice> {
             ),
           ),
           photoBuilder(context),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              Text(S.of(context).allowSolvingWithAPhoto),
+              Checkbox(
+                  value: checkbox,
+                  onChanged: (value) {
+                    setState(() {
+                      checkbox=value!;
+                      if (value == true) {
+                        photoSolution = 1;
+                        print(photoSolution);
+                      } else {
+                        photoSolution = 0;
+                      }
+                      setState(() {});
+                    });
+                  }),
+            ],
+          ),
           ElevatedButton(
               style: ButtonStyle(
                   backgroundColor: connected == true
@@ -284,7 +301,13 @@ class _UploadPractice extends State<UploadPractice> {
                       content: Text(S.of(context).noInternetConnection)));
                 }
               },
-              child: Text(S.of(context).submit))
+              child: Text(S.of(context).submit)),
+          // Row(
+          //   children: [
+          //     if (taskFile)SizedBox(width: 200, height: 100, child: Image.file(taskImg!)),
+          //     if (solutionFile)SizedBox(width: 200, height: 100, child: Image.file(solutionImg!)),
+          //   ],
+         // )
         ],
       ),
     );
@@ -303,7 +326,12 @@ class _UploadPractice extends State<UploadPractice> {
                 onPressed: () {
                   showCameraDialog(context);
                   taskImg = tempFile;
+
                   setState(() {});
+                  taskFile=true;
+                  setState(() {
+
+                  });
                 },
                 label: Text(S.of(context).taskImage),
                 backgroundColor: Colors.pink.shade800,
@@ -314,6 +342,10 @@ class _UploadPractice extends State<UploadPractice> {
                 onPressed: () {
                   showCameraDialog(context);
                   solutionImg = tempFile;
+                  setState(() {
+
+                  });
+                  solutionFile=true;
                   setState(() {});
                 },
                 label: Text(S.of(context).resultImage),

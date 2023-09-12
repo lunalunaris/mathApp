@@ -59,7 +59,7 @@ class _UserForm extends State<UserForm> {
   FirebaseFirestore db = FirebaseFirestore.instance;
   late String level;
   late String lang;
-  bool connected = false;
+  bool connected = true;
 
   signIn(BuildContext context) async {
     var email = emailController.text;

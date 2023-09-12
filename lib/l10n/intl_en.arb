@@ -84,5 +84,15 @@
   "noTheorySubmittedForThisTopic": "No theory submitted for this topic",
   "deletedSuccessfully": "Deleted successfully",
   "deleteFailed": "Delete failed",
-  "delete": "Delete"
+  "delete": "Delete",
+  "errorUploadingPhotoPleaseTryAgain": "Error uploading photo please try again",
+  "yourResult": "Your result:",
+  "theoryDeleted": "Theory deleted",
+  "quizzesDeleted": "Quizzes deleted",
+  "practiceTasksDeleted": "Practice tasks deleted",
+  "chooseFromAllCategories": "Choose from all categories",
+  "suggestedSolution": "Suggested solution",
+  "suggestedSolutions": "Suggested solutions",
+  "loading": "Loading...",
+  "allowSolvingWithAPhoto": "Allow solving with a photo?"
 }

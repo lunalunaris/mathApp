@@ -1,4 +1,5 @@
-import 'dart:io';
+import 'dart:convert';
+import 'dart:io' as i;
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -37,12 +38,16 @@ class _Practice extends State<Practice> {
   final responseController = TextEditingController();
   final ImagePicker imagePicker = ImagePicker();
   SqliteHandler sql = SqliteHandler();
-  bool flag = true;
+  bool solved = true;
   bool connected = true;
   bool downloaded = false;
   bool correct = false;
   bool enabled = false;
   String userRole = "";
+  String photoResult = "";
+
+  bool waiting = false;
+  bool photoProcessed = false;
   int index = 0;
   List<PracticeModel> practiceList = [
     PracticeModel(
@@ -53,9 +58,8 @@ class _Practice extends State<Practice> {
         img:
             "https://firebasestorage.googleapis.com/v0/b/math-16d0d.appspot.com/o/theory.png?alt=media&token=d3cfd46c-c247-4065-803a-00f621328968",
         result: "null",
-        resultImg:
-            "https://firebasestorage.googleapis.com/v0/b/math-16d0d.appspot.com/o/theory.png?alt=media&token=d3cfd46c-c247-4065-803a-00f621328968",
-        solutions: "null")
+        solutions: "null",
+        photoSolution: 0)
   ];
   List<String> completedPractice = [];
   String mathInput = "";
@@ -186,8 +190,8 @@ class _Practice extends State<Practice> {
             equation: docSnapshot["equation"],
             img: docSnapshot["img"],
             result: docSnapshot["result"],
-            resultImg: docSnapshot["resultImg"],
-            solutions: docSnapshot["solutions"]));
+            solutions: docSnapshot["solutions"],
+            photoSolution: docSnapshot["photoSolution"]));
       }
     }, onError: (e) => print("Error fetching practice by topic")).then(
             (value) async => {
@@ -270,9 +274,18 @@ class _Practice extends State<Practice> {
               child: Column(children: [
                 if (practiceList.isEmpty)
                   endTasks()
+                else if (waiting == true)
+                  waitingScreen()
                 else
-                  flag == true ? buildTaskView() : buildResultView()
+                  solved == true ? buildTaskView() : buildResultView()
               ]))),
+    );
+  }
+
+  Column waitingScreen() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [Text(S.of(context).loading)],
     );
   }
 
@@ -280,42 +293,45 @@ class _Practice extends State<Practice> {
     return SingleChildScrollView(
         child: Column(
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            FloatingActionButton.extended(
-              heroTag: "btn1",
-              onPressed: () {
-                if (enabled) {
-                  downloadPractice();
-                  setState(() {});
-                }
-              },
-              label: downloaded == true
-                  ? Text(S.of(context).downloaded)
-                  : Text(S.of(context).download),
-              backgroundColor: downloaded == true ? Colors.pink : Colors.teal,
-              icon: const Icon(Icons.download_rounded),
-            ),
-            if (userRole == "admin")
+        Padding(
+          padding: const EdgeInsets.only(top: 30),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
               FloatingActionButton.extended(
-                heroTag: "btn2",
+                heroTag: "btn1",
                 onPressed: () {
                   if (enabled) {
-                    deletePractice();
-                    if (index + 1 < practiceList.length) {
-                      nextTask();
-                    }
-                  } else {
-                    endTasks();
+                    downloadPractice();
+                    setState(() {});
                   }
-                  setState(() {});
                 },
-                label: Text(S.of(context).delete),
-                backgroundColor: Colors.pink,
-                icon: const Icon(Icons.delete_forever_rounded),
+                label: downloaded == true
+                    ? Text(S.of(context).downloaded)
+                    : Text(S.of(context).download),
+                backgroundColor: downloaded == true ? Colors.pink : Colors.teal,
+                icon: const Icon(Icons.download_rounded),
               ),
-          ],
+              if (userRole == "admin")
+                FloatingActionButton.extended(
+                  heroTag: "btn2",
+                  onPressed: () {
+                    if (enabled) {
+                      deletePractice();
+                      if (index + 1 < practiceList.length) {
+                        nextTask();
+                      }
+                    } else {
+                      endTasks();
+                    }
+                    setState(() {});
+                  },
+                  label: Text(S.of(context).delete),
+                  backgroundColor: Colors.pink,
+                  icon: const Icon(Icons.delete_forever_rounded),
+                ),
+            ],
+          ),
         ),
         Padding(
           padding: const EdgeInsets.all(30.0),
@@ -326,28 +342,65 @@ class _Practice extends State<Practice> {
         ),
         Padding(
           padding: const EdgeInsets.all(8.0),
+          child: Text(S.of(context).correctResult),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
           child: Math.tex(
             practiceList[index].result,
             mathStyle: MathStyle.display,
             textStyle: const TextStyle(fontSize: 20),
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Math.tex(practiceList[index].solutions,
-              mathStyle: MathStyle.display,
-              textStyle: const TextStyle(fontSize: 20)),
-        ),
-        if (practiceList[index].resultImg != "")
+        if (practiceList[index].solutions != "")
+          Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(S.of(context).suggestedSolutions),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Math.tex(practiceList[index].solutions,
+                    mathStyle: MathStyle.display,
+                    textStyle: const TextStyle(fontSize: 20)),
+              ),
+            ],
+          ),
+        if (photoResult != "")
           Padding(
             padding: const EdgeInsets.all(8.0),
-            child: CachedNetworkImage(
-              height: MediaQuery.of(context).size.height * 0.25,
-              imageUrl: practiceList[index].resultImg,
-              placeholder: (context, url) => const CircularProgressIndicator(),
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(S.of(context).yourResult),
+                ),
+                Math.tex(
+                  photoResult,
+                  mathStyle: MathStyle.display,
+                  textStyle: const TextStyle(fontSize: 20),
+                ),
+              ],
             ),
           ),
-        //TODO: result field to be filled after algorithm
+        if (mathInput!="")
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(S.of(context).yourResult),
+                ),
+                Math.tex(
+                  mathInput,
+                  mathStyle: MathStyle.display,
+                  textStyle: const TextStyle(fontSize: 20),
+                ),
+              ],
+            ),
+          ),
         // const Text("Your result, if read from photo, if not from input"),
         if (index + 1 < practiceList.length) nextTask() else endTasks()
       ],
@@ -364,7 +417,7 @@ class _Practice extends State<Practice> {
               margin: const EdgeInsets.all(15),
               child: Text(
                 S.of(context).youFinishedAllPracticeQuestions,
-                style: const TextStyle(fontSize: 22),
+                style: const TextStyle(fontSize: 18),
                 textAlign: TextAlign.center,
               )),
         ),
@@ -402,13 +455,16 @@ class _Practice extends State<Practice> {
   }
 
   Column nextTask() {
+    photoResult = "";
+    photoProcessed = false;
+    setState(() {});
     return Column(
       children: [
         Padding(
           padding: const EdgeInsets.all(8.0),
           child: ElevatedButton(
               onPressed: () {
-                flag = true;
+                solved = true;
                 correct = false;
                 if (index + 1 < practiceList.length) {
                   index += 1;
@@ -423,7 +479,7 @@ class _Practice extends State<Practice> {
             padding: const EdgeInsets.all(8.0),
             child: ElevatedButton(
                 onPressed: () {
-                  flag = true;
+                  solved = true;
                   setState(() {});
                 },
                 child: Text(S.of(context).tryAgain)),
@@ -433,30 +489,55 @@ class _Practice extends State<Practice> {
   }
 
   fileFromCamera() async {
-    final file = await imagePicker.pickImage(
-        source: ImageSource.camera, maxWidth: 500, maxHeight: 500);
-    // PhotoDecoder d= PhotoDecoder();
-    if (file == null) return;
-    File newFile = File(file.path);
-    var decodedImage = await decodeImageFromList(newFile.readAsBytesSync());
+    final file = await imagePicker
+        .pickImage(source: ImageSource.camera, maxWidth: 700, maxHeight: 700)
+        .then((value) async {
+      if (value == null) return;
+      i.File newFile = i.File(value.path);
+      var decodedImage = await decodeImageFromList(newFile.readAsBytesSync());
+      final uri = Uri.http("192.168.1.7:5000", '/upload');
+      var request = MultipartRequest('POST', uri);
+      Map<String, String> headers = {"Content-type": "multipart/form-data"};
 
-    File f = File(file.path);
-    print(f.readAsBytes().toString());
-    final uri = Uri.http("192.168.1.7:5000", '/upload');
-    var request = MultipartRequest('POST', uri);
-    Map<String, String> headers = {"Content-type": "multipart/form-data"};
-    request.files.add(
-      MultipartFile('image', f.readAsBytes().asStream(), f.lengthSync(),
-          filename: "filename.jpg"),
-    );
-    print(request.files.first.length.toString());
-    request.headers.addAll(headers);
-    request.fields["height"] = decodedImage.height.toString();
-    request.fields["width"] = decodedImage.width.toString();
-    print("request: " + request.toString());
-    var res = await request.send();
-    Response response = await Response.fromStream(res);
-    print(response.body.toString());
+      request.files.add(
+        MultipartFile(
+            'image', newFile.readAsBytes().asStream(), newFile.lengthSync(),
+            filename: "filename.jpg"),
+      );
+      print(newFile.readAsBytes().asStream());
+      request.headers.addAll(headers);
+      request.fields["height"] = decodedImage.height.toString();
+      request.fields["width"] = decodedImage.width.toString();
+      var res = await request.send();
+      await Response.fromStream(res).then((value) {
+        if (value.statusCode == 400 || value.statusCode == 500) {
+          waiting = false;
+          photoProcessed = false;
+          solved = false;
+          setState(() {});
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content:
+                    Text(S.of(context).errorUploadingPhotoPleaseTryAgain)));
+          }
+          throw Exception("Image upload failed");
+        } else {
+          var jsonres = jsonDecode(value.body);
+          photoResult = jsonres["result"];
+          photoProcessed = true;
+          waiting = false;
+          if (photoResult == practiceList[index].result) {
+            solved = true;
+            correct=true;
+          }
+          solved = false;
+          setState(() {});
+        }
+        print(value.body.toString());
+      }).catchError((e) {
+        print(e);
+      });
+    });
   }
 
   SingleChildScrollView buildTaskView() {
@@ -518,7 +599,7 @@ class _Practice extends State<Practice> {
                 hintText: S.of(context).yourSolution,
               ),
               // Decorate the input field using the familiar InputDecoration.
-              onChanged: (String value) {},
+              onChanged: (String value) {mathInput = value;},
               // Respond to changes in the input field.
               onSubmitted: (String value) {
                 mathInput = value;
@@ -536,9 +617,13 @@ class _Practice extends State<Practice> {
                       ? MaterialStateProperty.all(Colors.pink)
                       : MaterialStateProperty.all(Colors.blueGrey),
                 ),
-                onPressed: () {
-                  if (connected) {
-                    fileFromCamera();
+                onPressed: () async {
+                  if (connected &&
+                      !waiting &&
+                      practiceList[index].photoSolution == 1) {
+                    waiting = true;
+                    setState(() {});
+                    await fileFromCamera();
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                         content: Text(S.of(context).noInternetConnection)));
@@ -569,13 +654,14 @@ class _Practice extends State<Practice> {
                           ? MaterialStateProperty.all(Colors.pink)
                           : MaterialStateProperty.all(Colors.blueGrey)),
                   onPressed: () {
-                    if (enabled) {
+                    if (enabled && !waiting) {
                       print(practiceList[index].result);
                       if (mathInput == practiceList[index].result) {
                         correct = true;
+                        solved=true;
                         addPractice(practiceList[index].id);
                       }
-                      flag = false;
+                      solved = false;
                       setState(() {});
                     }
                   },

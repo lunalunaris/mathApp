@@ -16,7 +16,7 @@ class SqliteHandler {
       version: 1,
       onCreate: (Database db, int version) async {
         await db.execute(
-            'CREATE TABLE Practice(id TEXT PRIMARY KEY, topicId TEXT, content TEXT, img TEXT, equation TEXT, resultImg TEXT, result TEXT, solutions TEXT);');
+            'CREATE TABLE Practice(id TEXT PRIMARY KEY, topicId TEXT, content TEXT, img TEXT, equation TEXT, resultImg TEXT, result TEXT, solutions TEXT,solutionPhoto INTEGER);');
         await db.execute('CREATE TABLE Theory(id TEXT PRIMARY KEY, img TEXT, topicId TEXT);');
         await db.execute('CREATE TABLE Quiz(id TEXT PRIMARY KEY, content TEXT, equation TEXT, img TEXT, result TEXT, section TEXT, solutions TEXT,topicId TEXT);');
         await db.execute('CREATE TABLE Topic(id TEXT PRIMARY KEY, name TEXT, section TEXT, lang TEXT);');
