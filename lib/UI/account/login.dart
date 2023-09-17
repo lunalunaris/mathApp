@@ -62,10 +62,9 @@ class _UserForm extends State<UserForm> {
   bool connected = true;
 
   signIn(BuildContext context) async {
-    // var email = emailController.text;
-    // var password = passwordController.text;
-    var email = "zuska77@wp.pl";
-    var password="taja10";
+    var email = emailController.text;
+    var password = passwordController.text;
+
     try {
       final credential = await FirebaseAuth.instance
           .signInWithEmailAndPassword(email: email, password: password);
