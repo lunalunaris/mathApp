@@ -22,6 +22,7 @@ class Register extends StatelessWidget {
       ),
       backgroundColor: Colors.white,
       body: Scaffold(
+        backgroundColor: Colors.transparent,
         body: Container(
           decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -121,7 +122,7 @@ class _UserForm extends State<UserForm> {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.only(bottom: 140,left: 20,right: 20),
         child: Container(
           padding: const EdgeInsets.all(5),
           margin: const EdgeInsets.all(30),
@@ -135,7 +136,7 @@ class _UserForm extends State<UserForm> {
               const SizedBox(
                 height: 60,
               ),
-              Text(S.of(context).logIn,
+              Text(S.of(context).register,
                   style: const TextStyle(
                       fontSize: 30,
                       color: Colors.pink,
@@ -143,11 +144,7 @@ class _UserForm extends State<UserForm> {
               const SizedBox(
                 height: 20,
               ),
-              Text(S.of(context).welcomeBack,
-                  style: const TextStyle(fontSize: 20, color: Colors.teal)),
-              const SizedBox(
-                height: 30,
-              ),
+
               SizedBox(
                 width: 300,
                 child: Padding(

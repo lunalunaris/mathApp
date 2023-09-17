@@ -12,6 +12,7 @@ import 'package:math/UI/learning/theory.dart';
 
 import '../../Model/TopicModel.dart';
 import '../../generated/l10n.dart';
+import '../game/scene.dart';
 import '../settings/settings.dart';
 
 class Topic extends StatefulWidget {
@@ -352,7 +353,7 @@ class _Topic extends State<Topic> {
                 label: S.of(context).learn,
               ),
               BottomNavigationBarItem(
-                backgroundColor: Colors.lime,
+
                 icon: const Icon(Icons.games),
                 label: S.of(context).game,
               ),
@@ -371,14 +372,14 @@ class _Topic extends State<Topic> {
                       MaterialPageRoute(
                           builder: (context) => const Learning()));
                   break;
-                // case 2:
-                //   Navigator.of(context).pop();
-                //   Navigator.push(
-                //       context,
-                //       MaterialPageRoute(
-                //           builder: (context) =>
-                //               Game(user: user)));
-                //   break;
+                case 1:
+                  Navigator.of(context).pop();
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              Scene()));
+                  break;
                 case 2:
                   Navigator.of(context).pop();
                   Navigator.push(

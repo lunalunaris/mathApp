@@ -47,7 +47,7 @@ class _UploadPractice extends State<UploadPractice> {
   Color cameraColorResult = Colors.black45;
   File? solutionImg;
   File? taskImg;
- File? tempFile;
+ late File tempFile;
   bool solutionFile=false;
   bool taskFile=false;
   bool connected = true;
@@ -108,14 +108,10 @@ class _UploadPractice extends State<UploadPractice> {
   submitPractice(BuildContext context) async {
     try {
       var downloadUrlTask = "";
-      var downloadUrlSol = "";
-
-      if (taskImg != null) {
-        final nameTask = basename(taskImg!.path);
-        final destTask = 'practice/$nameTask';
-        var snapshotTask = await storage.ref(destTask).putFile(taskImg!);
+        final nameTask = basename(tempFile.path);
+        final destTask = 'practice/$nameTask/$container';
+        var snapshotTask = await storage.ref(destTask).putFile(tempFile);
         downloadUrlTask = await snapshotTask.ref.getDownloadURL();
-      }
       PracticeModel practice = PracticeModel(
           id: "none",
           topicId: container,
@@ -193,7 +189,7 @@ class _UploadPractice extends State<UploadPractice> {
             child: MathField(
               controller: practiceEquationController,
               keyboardType: MathKeyboardType.expression,
-              variables: const ['x', 'y', 'z', "="],
+              variables: const ['x', 'y', 'z', "=","a","b","c","H","r"],
               decoration: InputDecoration(
                 contentPadding:
                     const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
@@ -241,7 +237,7 @@ class _UploadPractice extends State<UploadPractice> {
             child: MathField(
               controller: practiceSolutionsController,
               keyboardType: MathKeyboardType.expression,
-              variables: const ['x', 'y', 'z', "="],
+              variables: const ['x', 'y', 'z', "=","a","b","c","H","r"],
               decoration: InputDecoration(
                 contentPadding:
                     const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
@@ -321,36 +317,23 @@ class _UploadPractice extends State<UploadPractice> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              FloatingActionButton.extended(
-                heroTag: "btn1",
+              IconButton(
                 onPressed: () {
-                  showCameraDialog(context);
-                  taskImg = tempFile;
-
+                  getImgFromCamera(context);
                   setState(() {});
-                  taskFile=true;
-                  setState(() {
-
-                  });
                 },
-                label: Text(S.of(context).taskImage),
-                backgroundColor: Colors.pink.shade800,
                 icon: const Icon(Icons.add_a_photo_rounded),
+                style: ButtonStyle(
+                    iconColor: MaterialStateProperty.all(cameraColorImg)),
               ),
-              FloatingActionButton.extended(
-                heroTag: "btn",
+              IconButton(
                 onPressed: () {
-                  showCameraDialog(context);
-                  solutionImg = tempFile;
-                  setState(() {
-
-                  });
-                  solutionFile=true;
+                  getImgFromGallery(context);
                   setState(() {});
                 },
-                label: Text(S.of(context).resultImage),
-                backgroundColor: Colors.pink.shade800,
-                icon: const Icon(Icons.add_a_photo_rounded),
+                icon: const Icon(Icons.photo_library_rounded),
+                style: ButtonStyle(
+                    iconColor: MaterialStateProperty.all(cameraColorImg)),
               ),
             ],
           ),

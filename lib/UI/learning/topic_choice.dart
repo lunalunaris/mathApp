@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:math/Database/sqliteHandler.dart';
 import 'package:math/Model/SectionModel.dart';
+import 'package:math/UI/game/scene.dart';
 import 'package:math/UI/learning/topic.dart';
 
 import '../../Model/TopicModel.dart';
@@ -43,10 +44,7 @@ class _TopicChoice extends State<TopicChoice> {
 
   @override
   void didChangeDependencies() {
-    lang = Localizations
-        .localeOf(context)
-        .languageCode
-        .toString();
+    lang = Localizations.localeOf(context).languageCode.toString();
     initConnect();
     if (connected) {
       initTopicList(section);
@@ -89,35 +87,23 @@ class _TopicChoice extends State<TopicChoice> {
       clearQuiz(index);
       clearTheory(index);
       topics.remove(index);
-      setState(() {
-      });
+      setState(() {});
       final collection = FirebaseFirestore.instance.collection('Topic');
       collection
           .doc(index.id) // <-- Doc ID to be deleted.
           .delete() // <-- Delete
-          .then((_) =>
-      {
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(S
-                .of(context)
-                .deletedSuccessfully)))
-
-      })
-          .catchError((e) =>
-      {
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(S
-                .of(context)
-                .deleteFailed)))
-      });
+          .then((_) => {
+                ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(S.of(context).deletedSuccessfully)))
+              })
+          .catchError((e) => {
+                ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(S.of(context).deleteFailed)))
+              });
+    } catch (e) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(S.of(context).deleteFailed)));
     }
-    catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(S
-              .of(context)
-              .deleteFailed)));
-    }
-
   }
 
   Future<void> clearPractice(topic) async {
@@ -184,20 +170,18 @@ class _TopicChoice extends State<TopicChoice> {
     return Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-          title: Text(S
-              .of(context)
-              .learning),
+          title: Text(S.of(context).learning),
         ),
         body: Container(
           decoration: BoxDecoration(
               gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.pink.shade500.withOpacity(0.8),
-                  Colors.teal.shade100.withOpacity(0.8),
-                ],
-              )),
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.pink.shade500.withOpacity(0.8),
+              Colors.teal.shade100.withOpacity(0.8),
+            ],
+          )),
           child: Container(
               padding: const EdgeInsets.all(5),
               margin: const EdgeInsets.all(30),
@@ -206,74 +190,72 @@ class _TopicChoice extends State<TopicChoice> {
                 borderRadius: BorderRadius.circular(10.0),
                 color: Colors.white.withOpacity(0.8),
               ),
-              child: ListView(
-                  children: [
-                    Container(
-                        padding: const EdgeInsets.all(10),
-                        alignment: Alignment.center,
-                        child: Text(
-                          S
-                              .of(context)
-                              .chooseTopic,
-                          style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.teal.withOpacity(0.7)),
-                        )),
-                    const Divider(
-                      height: 0,
-                      indent: 40,
-                      endIndent: 40,
-                      color: Colors.teal,
-                    ),
-                    for (var i in topics)
-                      Column(children: [
-
-                        ListTile(
-                          leading: Icon(Icons.stars,
-                              color: completedTopics.contains(i.id)
-                                  ? Colors.cyan
-                                  : Colors.black45),
-                          title: TextButton(
-                              onPressed: () {
-                                Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) =>
-                                            Topic(
-                                              topic: i,
-                                              section: section,
-                                            )));
-                              },
-                              style: ButtonStyle(
-                                  backgroundColor: MaterialStateProperty.all(
-                                      Colors.white.withOpacity(0.1)),
-                                  shape: MaterialStateProperty.all<
-                                      RoundedRectangleBorder>(
-                                      const RoundedRectangleBorder(
-                                        borderRadius:
-                                        BorderRadius.all(Radius.circular(5)),
-                                      ))),
-                              child: Text(
-                                i.name,
-                                style: const TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black54),
-                              )),
-                          trailing: userRole == "admin" ? IconButton(
-                              onPressed: () {
-                                deleteTopic(i);
-                              },
-                              icon: Icon(
-                                Icons.delete_forever_rounded, size: 30,)):Text(""),
-                        ),
-
-                      ],
+              child: ListView(children: [
+                Container(
+                    padding: const EdgeInsets.all(10),
+                    alignment: Alignment.center,
+                    child: Text(
+                      S.of(context).chooseTopic,
+                      style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.teal.withOpacity(0.7)),
+                    )),
+                const Divider(
+                  height: 0,
+                  indent: 40,
+                  endIndent: 40,
+                  color: Colors.teal,
+                ),
+                for (var i in topics)
+                  Column(
+                    children: [
+                      ListTile(
+                        leading: Icon(Icons.stars,
+                            color: completedTopics.contains(i.id)
+                                ? Colors.cyan
+                                : Colors.black45),
+                        title: TextButton(
+                            onPressed: () {
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => Topic(
+                                            topic: i,
+                                            section: section,
+                                          )));
+                            },
+                            style: ButtonStyle(
+                                backgroundColor: MaterialStateProperty.all(
+                                    Colors.white.withOpacity(0.1)),
+                                shape: MaterialStateProperty.all<
+                                        RoundedRectangleBorder>(
+                                    const RoundedRectangleBorder(
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(5)),
+                                ))),
+                            child: Text(
+                              i.name,
+                              style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black54),
+                            )),
+                        trailing: userRole == "admin"
+                            ? IconButton(
+                                onPressed: () {
+                                  deleteTopic(i);
+                                },
+                                icon: Icon(
+                                  Icons.delete_forever_rounded,
+                                  size: 30,
+                                ))
+                            : Text(""),
                       ),
-                    const Divider(height: 0),
-                  ])
-          ),
+                    ],
+                  ),
+                const Divider(height: 0),
+              ])),
         ),
         bottomNavigationBar: BottomNavigationBar(
             backgroundColor: Colors.teal.shade400,
@@ -283,21 +265,15 @@ class _TopicChoice extends State<TopicChoice> {
             items: <BottomNavigationBarItem>[
               BottomNavigationBarItem(
                 icon: const Icon(Icons.book),
-                label: S
-                    .of(context)
-                    .learn,
+                label: S.of(context).learn,
               ),
-              // BottomNavigationBarItem(
-              //   icon: const Icon(Icons.games),
-              //   label: S
-              //       .of(context)
-              //       .game,
-              // ),
+              BottomNavigationBarItem(
+                icon: const Icon(Icons.games),
+                label: S.of(context).game,
+              ),
               BottomNavigationBarItem(
                 icon: const Icon(Icons.settings),
-                label: S
-                    .of(context)
-                    .setup,
+                label: S.of(context).setup,
               ),
             ],
             onTap: (option) {
@@ -309,6 +285,12 @@ class _TopicChoice extends State<TopicChoice> {
                       MaterialPageRoute(
                           builder: (context) => const Learning()));
                   break;
+                case 1:
+                  Navigator.of(context).pop();
+                  Navigator.push(context,
+                      MaterialPageRoute(builder: (context) => Scene()));
+                  break;
+
                 case 1:
                   Navigator.of(context).pop();
                   Navigator.push(

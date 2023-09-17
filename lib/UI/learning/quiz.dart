@@ -251,7 +251,7 @@ class _Quiz extends State<Quiz> {
                     setState(() {});
                   },
                   child: Row(
-                    children: [const Text("A: "), Text(solutionList[0])],
+                    children: [ const Text("A: "), Math.tex(solutionList[0])],
                   ),
                 ),
               ),
@@ -275,7 +275,7 @@ class _Quiz extends State<Quiz> {
                     setState(() {});
                   },
                   child: Row(
-                    children: [const Text("B: "), Text(solutionList[1])],
+                    children: [const Text("B: "), Math.tex(solutionList[1])],
                   ),
                 ),
               ),
@@ -305,7 +305,7 @@ class _Quiz extends State<Quiz> {
                     setState(() {});
                   },
                   child: Row(
-                    children: [const Text("C: "), Text(solutionList[2])],
+                    children: [const Text("C: "), Math.tex(solutionList[2])],
                   ),
                 ),
               ),
@@ -329,7 +329,7 @@ class _Quiz extends State<Quiz> {
                     setState(() {});
                   },
                   child: Row(
-                    children: [const Text("D: "), Text(solutionList[3])],
+                    children: [const Text("D: "), Math.tex(solutionList[3])],
                   ),
                 ),
               ),

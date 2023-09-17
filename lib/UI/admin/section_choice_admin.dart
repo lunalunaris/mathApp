@@ -9,7 +9,7 @@ import 'package:math/UI/admin/topic_choice_admin.dart';
 import '../../generated/l10n.dart';
 
 class SectionChoice extends StatefulWidget {
-  late String? level;
+  late String level;
   late String lang;
   late String type;
 

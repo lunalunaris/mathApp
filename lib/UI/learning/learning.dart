@@ -13,6 +13,7 @@ import 'package:math/generated/l10n.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../../Model/TopicModel.dart';
+import '../game/scene.dart';
 import '../settings/settings.dart';
 
 class Learning extends StatefulWidget {
@@ -369,10 +370,10 @@ class _Learning extends State<Learning> {
                 icon: const Icon(Icons.book),
                 label: S.of(context).learn,
               ),
-              // BottomNavigationBarItem(
-              //   icon: const Icon(Icons.games),
-              //   label: S.of(context).game,
-              // ),
+              BottomNavigationBarItem(
+                icon: const Icon(Icons.games),
+                label: S.of(context).game,
+              ),
               BottomNavigationBarItem(
                 icon: const Icon(Icons.settings),
                 label: S.of(context).setup,
@@ -381,20 +382,20 @@ class _Learning extends State<Learning> {
             onTap: (option) {
               developer.log(option.toString());
               switch (option) {
-                // case 2:
-                //   Navigator.of(context).pop();
-                //   Navigator.push(
-                //       context,
-                //       MaterialPageRoute(
-                //           builder: (context) =>
-                //               Game(user: user)));
-                //   break;
-                case 1:
+
+                case 2:
                   Navigator.of(context).pop();
                   Navigator.push(
                       context,
                       MaterialPageRoute(
                           builder: (context) => const UserSettings()));
+                  break;
+                case 1:
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              Scene()));
                   break;
               }
             }));

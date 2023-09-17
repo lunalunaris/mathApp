@@ -38,23 +38,23 @@ class TopicModel {
   TopicModel.fromMap(Map<String, dynamic> result)
       : id = result["id"],
         name = result["name"],
-        sectionId = result["sectionId"],
+        sectionId = result["section"],
         lang = result["lang"];
 
   TopicModel.fromDbMap(Map<String, dynamic> result)
       : id = result["id"],
         name = result["name"],
-        sectionId = result["sectionId"];
+        sectionId = result["section"];
 
   Map<String, Object> toMap() {
-    return {'id': id, 'name': name, 'sectionId': sectionId, 'lang': lang};
+    return {'id': id, 'name': name, 'section': sectionId, 'lang': lang};
   }
 
   Map<String, Object> toDbMap() {
     return {
       'id': id,
       'name': name,
-      'sectionId': sectionId,
+      'section': sectionId,
     };
   }
 }

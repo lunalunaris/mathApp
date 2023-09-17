@@ -20,7 +20,7 @@ class PracticeModel {
       required this.img,
       required this.result,
       required this.solutions,
-        required this.photoSolution
+  required this.photoSolution
      });
 
   PracticeModel.fromMap(Map<String, dynamic> result)

@@ -56,6 +56,8 @@ dependencies:
   intl: ^0.18.0
   flutter_launcher_icons: ^0.13.1
   http: ^1.1.0
+  sqflite_common_ffi: ^2.3.0+2
+  flame: ^1.8.2
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -65,6 +67,7 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^2.0.0
+  test: ^1.24.1
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
@@ -90,6 +93,19 @@ flutter:
     - assets/logo.png
     - assets/temp2.png
     - assets/temp3.png
+    - assets/page1.png
+    - assets/page22.png
+    - assets/page3.png
+    - assets/dialogue1.png
+    - assets/bottles.png
+    - assets/0.png
+    - assets/8.png
+    - assets/88.png
+    - assets/888.png
+    - assets/quit.png
+    - assets/check.png
+    - assets/correct.png
+    - assets/wrong.png
   # To add assets to your application, add an assets section, like this:
 
 

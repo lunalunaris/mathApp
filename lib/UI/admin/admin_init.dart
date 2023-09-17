@@ -71,7 +71,7 @@ class _AdminInitState extends State<AdminInit> {
           context,
           MaterialPageRoute(
               builder: (context) => SectionChoice(
-                  level: levelList.values.elementAt(langIndex),
+                  level: levelList.values.elementAt(levelIndex),
                   lang: languageList.values.elementAt(langIndex),
                   type: typeList.values.elementAt(typeIndex))));
     }

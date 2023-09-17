@@ -16,7 +16,7 @@ import 'package:math/Model/TopicModel.dart';
 import 'package:math/generated/l10n.dart';
 import 'package:math_keyboard/math_keyboard.dart';
 import 'package:sqflite/sqflite.dart';
-
+import 'package:http/http.dart' as http;
 class Practice extends StatefulWidget {
   late TopicModel topic;
   late SectionModel section;
@@ -43,6 +43,7 @@ class _Practice extends State<Practice> {
   bool downloaded = false;
   bool correct = false;
   bool enabled = false;
+  bool responseSent = false;
   String userRole = "";
   String photoResult = "";
 
@@ -110,8 +111,8 @@ class _Practice extends State<Practice> {
     setState(() {});
     final collection = FirebaseFirestore.instance.collection('Practice');
     collection
-        .doc(p.id) // <-- Doc ID to be deleted.
-        .delete() // <-- Delete
+        .doc(p.id)
+        .delete()
         .then((_) => {
               ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text(S.of(context).deletedSuccessfully)))
@@ -180,7 +181,6 @@ class _Practice extends State<Practice> {
         .where("topicId", isEqualTo: topic.id)
         .get()
         .then((querySnapshot) async {
-      print("practice by topic completed");
       practiceList = [];
       for (var docSnapshot in querySnapshot.docs) {
         practiceList.add(PracticeModel(
@@ -203,7 +203,6 @@ class _Practice extends State<Practice> {
                       .then((value) async {
                     completedPractice = [];
                     if (value.size != 0) {
-                      print("here here");
                       for (var item in value.docs) {
                         completedPractice.add(item["practice"]);
                       }
@@ -369,22 +368,39 @@ class _Practice extends State<Practice> {
           ),
         if (photoResult != "")
           Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.all(4.0),
             child: Column(
               children: [
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text(S.of(context).yourResult),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(4.0),
+                      child: Text(S.of(context).yourResult),
+                    ),  Padding(
+                      padding: const EdgeInsets.all(4.0),
+                      child: Math.tex(
+                        photoResult,
+                        mathStyle: MathStyle.display,
+                        textStyle: const TextStyle(fontSize: 20),
+                      ),
+                    ),
+                  ],
                 ),
-                Math.tex(
-                  photoResult,
-                  mathStyle: MathStyle.display,
-                  textStyle: const TextStyle(fontSize: 20),
-                ),
+
+                //TODO: block button if sent
+                TextButton(
+                    onPressed: () {
+                      if (!responseSent) {
+                        sendResponse();
+                        setState(() {});
+                      }
+                    },
+                    child: Text(S.of(context).isThisYourResult))
               ],
             ),
           ),
-        if (mathInput!="")
+        if (mathInput != "")
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Column(
@@ -405,6 +421,36 @@ class _Practice extends State<Practice> {
         if (index + 1 < practiceList.length) nextTask() else endTasks()
       ],
     ));
+  }
+
+  sendResponse() async {
+    final uri = Uri.http("192.168.1.7:5000", '/upload');
+    var request= await http.post(
+      Uri.parse('http://192.168.1.7:5000/verify'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(<String, String>{
+        'userId': user!.uid,
+      }),
+    );
+    if (request.statusCode==200 || request.statusCode==201)
+      {
+        responseSent = true;
+        setState(() {});
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(S.of(context).thankYouForYourFeedback)));
+        }
+      }
+    else{
+      responseSent = false;
+      setState(() {});
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(S.of(context).errorSendingYourResponse)));
+      }
+    }
   }
 
   Column endTasks() {
@@ -508,6 +554,7 @@ class _Practice extends State<Practice> {
       request.headers.addAll(headers);
       request.fields["height"] = decodedImage.height.toString();
       request.fields["width"] = decodedImage.width.toString();
+      request.fields["userId"] = user!.uid;
       var res = await request.send();
       await Response.fromStream(res).then((value) {
         if (value.statusCode == 400 || value.statusCode == 500) {
@@ -528,7 +575,7 @@ class _Practice extends State<Practice> {
           waiting = false;
           if (photoResult == practiceList[index].result) {
             solved = true;
-            correct=true;
+            correct = true;
           }
           solved = false;
           setState(() {});
@@ -584,13 +631,9 @@ class _Practice extends State<Practice> {
           Padding(
             padding: const EdgeInsets.all(6.0),
             child: MathField(
-              // No parameters are required.
               controller: inputController,
-
               keyboardType: MathKeyboardType.expression,
-              // Specify the keyboard type (expression or number only).
               variables: const ['x', 'y', 'z'],
-              // Specify the variables the user can use (only in expression mode).
               decoration: InputDecoration(
                 contentPadding:
                     const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
@@ -598,15 +641,13 @@ class _Practice extends State<Practice> {
                     borderRadius: BorderRadius.circular(10.0)),
                 hintText: S.of(context).yourSolution,
               ),
-              // Decorate the input field using the familiar InputDecoration.
-              onChanged: (String value) {mathInput = value;},
-              // Respond to changes in the input field.
+              onChanged: (String value) {
+                mathInput = value;
+              },
               onSubmitted: (String value) {
                 mathInput = value;
               },
-              // Respond to the user submitting their input.
-              autofocus:
-                  false, // Enable or disable autofocus of the input field.
+              autofocus: false,
             ),
           ),
           Container(
@@ -658,7 +699,7 @@ class _Practice extends State<Practice> {
                       print(practiceList[index].result);
                       if (mathInput == practiceList[index].result) {
                         correct = true;
-                        solved=true;
+                        solved = true;
                         addPractice(practiceList[index].id);
                       }
                       solved = false;

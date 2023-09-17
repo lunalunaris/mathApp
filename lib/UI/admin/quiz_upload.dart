@@ -85,10 +85,8 @@ class _UploadQuiz extends State<UploadQuiz> {
   submitQuiz(BuildContext context) async {
     try {
       var downloadUrl = "";
-      print(image.path);
-      print(image.path);
       final name = basename(image.path);
-      final dest = 'practice/$name';
+      final dest = 'practice/$name/$container';
       var snapshotTask = await storage.ref(dest).putFile(image);
       downloadUrl = await snapshotTask.ref.getDownloadURL();
       var solution = "$aInput,$bInput,$cInput,$dInput";
@@ -172,7 +170,7 @@ class _UploadQuiz extends State<UploadQuiz> {
       resizeToAvoidBottomInset: true,
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: Text(type),
+        title: Text("Quiz"),
       ),
       body: Container(
           decoration: BoxDecoration(
@@ -243,7 +241,7 @@ class _UploadQuiz extends State<UploadQuiz> {
               child: MathField(
                 controller: quizEquationController,
                 keyboardType: MathKeyboardType.expression,
-                variables: const ['x', 'y', 'z'],
+                variables: const ['x', 'y', 'z',"=","a","b","c","H","r"],
                 decoration: InputDecoration(
                   contentPadding:
                       const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
@@ -267,7 +265,7 @@ class _UploadQuiz extends State<UploadQuiz> {
               child: MathField(
                 controller: quizResultController,
                 keyboardType: MathKeyboardType.expression,
-                variables: const ['x', 'y', 'z'],
+                variables: const ['x', 'y', 'z',"=","a","b","c","H","r"],
                 decoration: InputDecoration(
                   contentPadding:
                       const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
@@ -294,7 +292,7 @@ class _UploadQuiz extends State<UploadQuiz> {
                   child: MathField(
                     controller: aSolutionsController,
                     keyboardType: MathKeyboardType.expression,
-                    variables: const ['x', 'y', 'z'],
+                    variables: const ['x', 'y', 'z',"=","a","b","c","H","r"],
                     decoration: InputDecoration(
                       contentPadding: const EdgeInsets.symmetric(
                           vertical: 10, horizontal: 20),
@@ -318,7 +316,7 @@ class _UploadQuiz extends State<UploadQuiz> {
                   child: MathField(
                     controller: bSolutionsController,
                     keyboardType: MathKeyboardType.expression,
-                    variables: const ['x', 'y', 'z'],
+                    variables: const ['x', 'y', 'z',"=","a","b","c","H","r"],
                     decoration: InputDecoration(
                       contentPadding: const EdgeInsets.symmetric(
                           vertical: 10, horizontal: 20),
@@ -347,7 +345,7 @@ class _UploadQuiz extends State<UploadQuiz> {
                   child: MathField(
                     controller: cSolutionsController,
                     keyboardType: MathKeyboardType.expression,
-                    variables: const ['x', 'y', 'z'],
+                    variables: const ['x', 'y', 'z',"=","a","b","c","H","r"],
                     decoration: InputDecoration(
                       contentPadding: const EdgeInsets.symmetric(
                           vertical: 10, horizontal: 20),
@@ -371,7 +369,7 @@ class _UploadQuiz extends State<UploadQuiz> {
                   child: MathField(
                     controller: dSolutionsController,
                     keyboardType: MathKeyboardType.expression,
-                    variables: const ['x', 'y', 'z'],
+                    variables: const ['x', 'y', 'z',"=","a","b","c","H","r"],
                     decoration: InputDecoration(
                       contentPadding: const EdgeInsets.symmetric(
                           vertical: 10, horizontal: 20),

@@ -9,6 +9,7 @@ import 'package:math/UI/learning/learning.dart';
 import 'package:math/UI/learning/level_choice.dart';
 
 import '../../generated/l10n.dart';
+import '../game/scene.dart';
 
 class UserSettings extends StatefulWidget {
   @override
@@ -276,16 +277,16 @@ class _Settings extends State<UserSettings> {
 
       bottomNavigationBar: BottomNavigationBar(
           backgroundColor: Colors.teal,
-          currentIndex: 1,
+          currentIndex: 2,
           items:  <BottomNavigationBarItem>[
             BottomNavigationBarItem(
               icon: const Icon(Icons.book),
               label: S.of(context).learn,
             ),
-            // BottomNavigationBarItem(
-            //   icon: const Icon(Icons.games),
-            //   label: S.of(context).game,
-            // ),
+            BottomNavigationBarItem(
+              icon: const Icon(Icons.games),
+              label: S.of(context).game,
+            ),
             BottomNavigationBarItem(
               icon: const Icon(Icons.settings),
               label: S.of(context).setup,
@@ -298,23 +299,16 @@ class _Settings extends State<UserSettings> {
                 Navigator.push(context,
                     MaterialPageRoute(builder: (context) => const Learning()));
                 break;
+              case 1:
+                Navigator.of(context).pop();
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) =>
+                            Scene()));
+                break;
             }
-            // case 2:
-            //   Navigator.of(context).pop();
-            //   Navigator.push(
-            //       context,
-            //       MaterialPageRoute(
-            //           builder: (context) =>
-            //               Game(user: user)));
-            //   break;
-            //   case 3:
-            //     Navigator.of(context).pop();
-            //     Navigator.push(
-            //         context,
-            //         MaterialPageRoute(
-            //             builder: (context) => Settings(user: user)));
-            //     break;
-            // }
+
           },
           selectedItemColor: Colors.pink),
     );

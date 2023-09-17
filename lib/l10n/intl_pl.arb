@@ -94,5 +94,8 @@
   "suggestedSolution": "Suggested solution",
   "suggestedSolutions": "Suggested solutions",
   "loading": "Loading...",
-  "allowSolvingWithAPhoto": "Allow solving with a photo?"
+  "allowSolvingWithAPhoto": "Allow solving with a photo?",
+  "isThisYourResult": "Is this your result?",
+  "thankYouForYourFeedback": "Thank you for your feedback!",
+  "errorSendingYourResponse": "Error sending your response"
 }
